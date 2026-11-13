@@ -1,15 +1,6 @@
 import { EmptyState } from "../components/ui";
 
-/** Temporary home pages until F-03 (owner) and F-05 (respondent) are implemented. */
-export function OwnerHome() {
-  return (
-    <section>
-      <h1>My surveys</h1>
-      <EmptyState title="Survey authoring arrives with F-03." />
-    </section>
-  );
-}
-
+/** Temporary respondent home page until F-05 is implemented. */
 export function RespondentHome() {
   return (
     <section>

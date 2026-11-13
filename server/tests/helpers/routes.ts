@@ -13,4 +13,11 @@ export interface ProtectedRoute {
 export const PROTECTED_ROUTES: ProtectedRoute[] = [
   { method: "get", path: "/api/auth/me", role: "ANY" },
   { method: "post", path: "/api/auth/logout", role: "ANY" },
+  // F-03 / F-04 (owner)
+  { method: "get", path: "/api/owner/surveys", role: "SURVEY_OWNER" },
+  { method: "post", path: "/api/owner/surveys", role: "SURVEY_OWNER" },
+  { method: "get", path: "/api/owner/surveys/:id", role: "SURVEY_OWNER" },
+  { method: "put", path: "/api/owner/surveys/:id", role: "SURVEY_OWNER" },
+  { method: "post", path: "/api/owner/surveys/:id/publish", role: "SURVEY_OWNER" },
+  { method: "post", path: "/api/owner/surveys/:id/close", role: "SURVEY_OWNER" },
 ];
