@@ -2,6 +2,7 @@
  * TEST-E2E-01 (AC-05-02, AC-06-01): owner creates + publishes -> customer answers -> owner sees summary.
  * TEST-E2E-02 (AC-05-06): a missing required answer shows an error and keeps the other answers.
  * Requires the seeded demo accounts (npm run prisma:seed) and their passwords in server/.env.
+ * Each test creates its own survey, so the results do not depend on earlier data in the database.
  */
 import { expect, test, type Page } from "@playwright/test";
 
@@ -53,7 +54,7 @@ test("TEST-E2E-01 owner publishes, customer answers, owner sees the summary", as
   await login(page, CUSTOMER);
   await expect(page.getByRole("heading", { name: "Available surveys" })).toBeVisible();
   const card = page.locator(".card", { hasText: title });
-  await card.getByRole("link", { name: "Answer" }).click();
+  await card.getByRole("link", { name: "Answer", exact: true }).click();
   await page.getByRole("radiogroup", { name: "How was the taste?" }).getByText("5", { exact: true }).click();
   await page.getByLabel("Green curry").check();
   await shot(page, "02-customer-answering");
@@ -77,20 +78,36 @@ test("TEST-E2E-01 owner publishes, customer answers, owner sees the summary", as
   await shot(page, "04-owner-summary");
 });
 
-test("TEST-E2E-02 a missing required answer shows an error and keeps other answers", async ({ page }) => {
-  test.skip(!CUSTOMER.password, "Set DEMO_USER_PASSWORD in server/.env");
+test("TEST-E2E-02 a missing required answer shows an error and keeps other answers", async ({ page, request }) => {
+  test.skip(!OWNER.password || !CUSTOMER.password, "Set ADMIN_PASSWORD and DEMO_USER_PASSWORD in server/.env");
+  // Arrange through the API: a fresh published survey, so the result never depends on earlier
+  // manual testing in the same database (customer1 may already have answered the seeded survey).
+  const csrf = { "X-Requested-With": "Donjaicheck" };
+  const title = `E2E validation survey ${Date.now()}`;
+  expect((await request.post("/api/auth/login", { headers: csrf, data: OWNER })).ok()).toBe(true);
+  const created = await request.post("/api/owner/surveys", {
+    headers: csrf,
+    data: {
+      title,
+      questions: [
+        { text: "How was the taste?", type: "RATING", required: true },
+        { text: "How fast was the service?", type: "RATING", required: true },
+        { text: "Anything we could do better?", type: "TEXT", required: false },
+      ],
+    },
+  });
+  expect(created.status()).toBe(201);
+  const { survey } = await created.json();
+  expect((await request.post(`/api/owner/surveys/${survey.id}/publish`, { headers: csrf })).ok()).toBe(true);
+
   await login(page, CUSTOMER);
-  // The seeded sample survey has two required ratings, a required choice and an optional comment.
-  const card = page.locator(".card", { hasText: "Dinner experience at Donjai Siam" });
-  const answer = card.getByRole("link", { name: "Answer" });
-  await expect(card).toBeVisible();
-  test.skip((await answer.count()) === 0, "customer1 already answered the sample survey in this database");
-  await answer.click();
-  await page.getByRole("radiogroup", { name: "How would you rate the taste of your food?" }).getByText("4", { exact: true }).click();
+  await page.locator(".card", { hasText: title }).getByRole("link", { name: "Answer", exact: true }).click();
+  await page.getByRole("radiogroup", { name: "How was the taste?" }).getByText("4", { exact: true }).click();
   await page.getByLabel("Anything we could do better?").fill("More chilli please");
   await page.getByRole("button", { name: "Submit answers" }).click();
   await expect(page.getByRole("alert")).toContainText("Please answer the highlighted questions.");
-  await expect(page.getByText("Required").first()).toBeVisible();
+  await expect(page.getByText("Required")).toHaveCount(1); // only the unanswered service question
   await expect(page.getByLabel("Anything we could do better?")).toHaveValue("More chilli please");
+  await expect(page).toHaveURL(new RegExp(`/surveys/${survey.id}$`)); // stayed on the form
   await shot(page, "05-validation-error");
 });
