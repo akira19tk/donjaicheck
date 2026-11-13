@@ -4,7 +4,7 @@
 |---|---|
 | Requirements | FR-04, FR-05, FR-08, BR-05, BR-08, NFR-06 |
 | Depends on | F-01, F-02 |
-| Version | 1.0 (pre-implementation) |
+| Version | 1.1 (1.0 pre-implementation; 1.1 note on TEST-03-06) |
 
 ## Behaviour and workflow
 1. Owner opens **My surveys** and presses **New survey**.
@@ -54,3 +54,5 @@ Survey editor with dynamic question list; field errors shown under each field fr
 
 ## Definition of Done (feature)
 Product DoD plus TEST-03-01…06 and TEST-U-03 pass; editor demonstrated in UI.
+
+**Revision 1.1:** the `Response` table arrives with F-05, so in the F-03 PR TEST-03-06 checks ownership and that `responseCount` is present (0); the F-05 PR extends TEST-03-06 to assert a real count of 1 (`tests/api/f05-response.test.ts`).

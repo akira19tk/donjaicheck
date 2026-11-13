@@ -20,6 +20,8 @@ export const PROTECTED_ROUTES: ProtectedRoute[] = [
   { method: "put", path: "/api/owner/surveys/:id", role: "SURVEY_OWNER" },
   { method: "post", path: "/api/owner/surveys/:id/publish", role: "SURVEY_OWNER" },
   { method: "post", path: "/api/owner/surveys/:id/close", role: "SURVEY_OWNER" },
+  // F-06
+  { method: "get", path: "/api/owner/surveys/:id/summary", role: "SURVEY_OWNER" },
   // F-05 (respondent)
   { method: "get", path: "/api/surveys", role: "RESPONDENT" },
   { method: "get", path: "/api/surveys/:id", role: "RESPONDENT" },

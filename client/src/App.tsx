@@ -7,6 +7,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { MySurveysPage } from "./pages/owner/MySurveysPage";
 import { SurveyDetailPage } from "./pages/owner/SurveyDetailPage";
 import { SurveyEditorPage } from "./pages/owner/SurveyEditorPage";
+import { SummaryPage } from "./pages/owner/SummaryPage";
 import { AnswerSurveyPage } from "./pages/respondent/AnswerSurveyPage";
 import { AvailableSurveysPage } from "./pages/respondent/AvailableSurveysPage";
 import { ResponsePage } from "./pages/respondent/ResponsePage";
@@ -27,6 +28,7 @@ export function App() {
           <Route path="/owner/surveys/new" element={<SurveyEditorPage />} />
           <Route path="/owner/surveys/:id" element={<SurveyDetailPage />} />
           <Route path="/owner/surveys/:id/edit" element={<SurveyEditorPage />} />
+          <Route path="/owner/surveys/:id/summary" element={<SummaryPage />} />
         </Route>
       </Route>
       <Route element={<RequireRole role="RESPONDENT" />}>
