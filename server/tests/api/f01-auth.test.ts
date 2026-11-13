@@ -4,7 +4,8 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "../../src/prisma";
 import { createUser, resetDb, TEST_PASSWORD } from "../helpers/db";
-import { api, loginAs } from "../helpers/http";
+import request from "supertest";
+import { api, app, loginAs } from "../helpers/http";
 
 let ownerEmail: string;
 let respondentEmail: string;
@@ -106,8 +107,6 @@ describe("F-01 login / logout / me", () => {
   });
 
   it("rejects a state-changing request without the CSRF header", async () => {
-    const request = (await import("supertest")).default;
-    const { app } = await import("../helpers/http");
     const res = await request(app).post("/api/auth/login").send({ email: ownerEmail, password: TEST_PASSWORD });
     expect(res.status).toBe(403);
     expect(res.body.code).toBe("CSRF_REJECTED");
