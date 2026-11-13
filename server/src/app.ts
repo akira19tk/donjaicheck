@@ -4,6 +4,7 @@ import path from "path";
 import { authRouter } from "./routes/auth";
 import { healthRouter } from "./routes/health";
 import { ownerRouter } from "./routes/owner";
+import { respondentRouter } from "./routes/respondent";
 import { csrfCheck } from "./middleware/auth";
 import { errorHandler, notFound } from "./lib/errors";
 
@@ -17,6 +18,7 @@ export function createApp() {
   app.use("/api", csrfCheck);
   app.use("/api/auth", authRouter);
   app.use("/api/owner", ownerRouter);
+  app.use("/api", respondentRouter);
 
   // Unknown API paths return JSON 404, never the SPA.
   app.use("/api", (_req, _res, next) => next(notFound()));
