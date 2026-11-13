@@ -18,15 +18,21 @@ const surveyInclude = {
 
 type SurveyWithQuestions = Prisma.SurveyGetPayload<{ include: typeof surveyInclude }>;
 
-export function parseId(raw: string): number {
+export function parseId(raw: unknown): number {
   const id = Number(raw);
   if (!Number.isInteger(id) || id <= 0) throw notFound();
   return id;
 }
 
-/** Number of responses per survey id (F-05 adds the Response table). */
-export async function responseCounts(_surveyIds: number[]): Promise<Map<number, number>> {
-  return new Map();
+/** Number of responses per survey id. */
+export async function responseCounts(surveyIds: number[]): Promise<Map<number, number>> {
+  if (surveyIds.length === 0) return new Map();
+  const rows = await prisma.response.groupBy({
+    by: ["surveyId"],
+    where: { surveyId: { in: surveyIds } },
+    _count: { _all: true },
+  });
+  return new Map(rows.map((r) => [r.surveyId, r._count._all]));
 }
 
 export function toSurveyDetail(s: SurveyWithQuestions, responseCount: number) {
