@@ -22,6 +22,7 @@ model User {
   createdAt    DateTime  @default(now())
   sessions     Session[]
   surveys      Survey[]
+  responses    Response[]
 }
 
 // F-01 / NFR-03: only the SHA-256 hash of the session token is stored.
@@ -62,6 +63,7 @@ model Survey {
   publishedAt DateTime?
   closedAt    DateTime?
   questions   Question[]
+  responses   Response[]
 
   @@index([ownerId])
   @@index([status])
@@ -76,6 +78,7 @@ model Question {
   type     QuestionType
   required Boolean          @default(true)
   options  QuestionOption[]
+  answers  Answer[]
 
   @@unique([surveyId, position])
 }
@@ -86,6 +89,39 @@ model QuestionOption {
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   position   Int
   label      String
+  answers    Answer[]
 
   @@unique([questionId, label])
+}
+
+// F-05 ---------------------------------------------------------------------
+
+// BR-01: one response per respondent per survey, enforced by the unique key.
+model Response {
+  id           Int      @id @default(autoincrement())
+  surveyId     Int
+  survey       Survey   @relation(fields: [surveyId], references: [id])
+  respondentId Int
+  respondent   User     @relation(fields: [respondentId], references: [id])
+  submittedAt  DateTime @default(now())
+  answers      Answer[]
+
+  @@unique([surveyId, respondentId])
+  @@index([respondentId])
+}
+
+// BR-03: ratingValue 1-5 is also enforced by a CHECK constraint in the migration.
+model Answer {
+  id          Int             @id @default(autoincrement())
+  responseId  Int
+  response    Response        @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  questionId  Int
+  question    Question        @relation(fields: [questionId], references: [id])
+  ratingValue Int?
+  optionId    Int?
+  option      QuestionOption? @relation(fields: [optionId], references: [id])
+  textValue   String?
+
+  @@unique([responseId, questionId])
+  @@index([questionId])
 }
