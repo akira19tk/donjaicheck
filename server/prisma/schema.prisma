@@ -1,0 +1,127 @@
+// Donjaicheck data model. See docs/system-sds.md §2.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SURVEY_OWNER
+  RESPONDENT
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+  surveys      Survey[]
+  responses    Response[]
+}
+
+// F-01 / NFR-03: only the SHA-256 hash of the session token is stored.
+model Session {
+  tokenHash String   @id
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// F-03 / F-04 -------------------------------------------------------------
+
+enum SurveyStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum QuestionType {
+  RATING
+  SINGLE_CHOICE
+  TEXT
+}
+
+model Survey {
+  id          Int          @id @default(autoincrement())
+  ownerId     Int
+  owner       User         @relation(fields: [ownerId], references: [id])
+  title       String
+  description String       @default("")
+  status      SurveyStatus @default(DRAFT)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  publishedAt DateTime?
+  closedAt    DateTime?
+  questions   Question[]
+  responses   Response[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model Question {
+  id       Int              @id @default(autoincrement())
+  surveyId Int
+  survey   Survey           @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  position Int
+  text     String
+  type     QuestionType
+  required Boolean          @default(true)
+  options  QuestionOption[]
+  answers  Answer[]
+
+  @@unique([surveyId, position])
+}
+
+model QuestionOption {
+  id         Int      @id @default(autoincrement())
+  questionId Int
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  position   Int
+  label      String
+  answers    Answer[]
+
+  @@unique([questionId, label])
+}
+
+// F-05 ---------------------------------------------------------------------
+
+// BR-01: one response per respondent per survey, enforced by the unique key.
+model Response {
+  id           Int      @id @default(autoincrement())
+  surveyId     Int
+  survey       Survey   @relation(fields: [surveyId], references: [id])
+  respondentId Int
+  respondent   User     @relation(fields: [respondentId], references: [id])
+  submittedAt  DateTime @default(now())
+  answers      Answer[]
+
+  @@unique([surveyId, respondentId])
+  @@index([respondentId])
+}
+
+// BR-03: ratingValue 1-5 is also enforced by a CHECK constraint in the migration.
+model Answer {
+  id          Int             @id @default(autoincrement())
+  responseId  Int
+  response    Response        @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  questionId  Int
+  question    Question        @relation(fields: [questionId], references: [id])
+  ratingValue Int?
+  optionId    Int?
+  option      QuestionOption? @relation(fields: [optionId], references: [id])
+  textValue   String?
+
+  @@unique([responseId, questionId])
+  @@index([questionId])
+}
