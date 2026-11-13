@@ -4,7 +4,7 @@
 |---|---|
 | Requirements | FR-01, FR-02, FR-03, NFR-01, NFR-03 |
 | Depends on | — |
-| Version | 1.0 (pre-implementation) |
+| Version | 1.1 (1.0 pre-implementation; 1.1 seed variable names aligned with SDS 1.1) |
 
 ## Behaviour and workflow
 1. User opens `/login`, enters email and password, presses **Log in**.
@@ -27,7 +27,7 @@
 | GET /api/auth/me | — (cookie) | 200 `{ "user": {...} }` | 401 |
 
 ## Data
-`User` (id, name, email unique, passwordHash, role, createdAt) and `Session` (tokenHash PK, userId, createdAt, expiresAt). Migration `init` creates both plus enum `Role`. Seed creates 2 owners and 3 respondents with password from `SEED_PASSWORD`.
+`User` (id, name, email unique, passwordHash, role, createdAt) and `Session` (tokenHash PK, userId, createdAt, expiresAt). Migration `init` creates both plus enum `Role`. Seed creates 2 owners (password from `ADMIN_PASSWORD`) and 3 demo respondents (password from `DEMO_USER_PASSWORD`).
 
 ## UI
 Login form with email, password, submit, inline error banner on 401; header with name, role badge and **Log out** on every signed-in page.

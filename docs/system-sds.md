@@ -8,7 +8,7 @@ Version 1.0 (Sprint 1 baseline). Requirements: [srs.md](srs.md). Features: [feat
 |---|---|---|
 | UI | React 19 + TypeScript + Vite, React Router | Screens, client-side form hints, calls the JSON API with `credentials: "include"`. Never decides permissions. |
 | API / application | Node.js 24, Express 5, TypeScript | Authentication, role and ownership checks, validation, **all business rules (BR-01…BR-08)**, JSON responses. |
-| Data | PostgreSQL 16 via Prisma ORM 6 | Persistent storage, migrations, uniqueness and check constraints that back the business rules. |
+| Data | PostgreSQL 16 via Prisma ORM 7 (`@prisma/adapter-pg` driver adapter) | Persistent storage, migrations, uniqueness and check constraints that back the business rules. |
 
 The team reuses the stack from Labs 1–4 (Node, React, PostgreSQL, Prisma) so the course Starter Kit for Docker, CI and GCP applies directly.
 
@@ -31,7 +31,7 @@ server/
   src/index.ts          reads PORT, starts server
   src/lib/              auth.ts (hash, token), errors.ts
   src/middleware/       requireAuth, requireRole, csrfCheck
-  src/domain/           surveyRules.ts, responseRules.ts (pure, unit-tested)
+  src/domain/           surveyRules.ts, responseRules.ts, summary.ts (pure, unit-tested)
   src/routes/           auth.ts, owner.ts, respondent.ts, health.ts
   tests/                unit/, api/ (Vitest + Supertest against a test DB)
 client/src/             pages/, components/, api.ts, auth context
@@ -63,7 +63,7 @@ erDiagram
 | Response | id, surveyId → Survey, respondentId → User, submittedAt | **unique (surveyId, respondentId)** — BR-01 |
 | Answer | id, responseId → Response, questionId → Question, ratingValue?, optionId? → QuestionOption, textValue? | unique (responseId, questionId); CHECK ratingValue 1–5 |
 
-**Database setup.** `prisma migrate deploy` applies committed migrations; migrations only add tables/columns so an older image still works after a rollback (Lab 5). `npm run prisma:seed` is idempotent (upserts) and creates: 2 owners, 3 respondents, one published sample survey ("Dinner experience at Donjai Siam") and one draft. Seed passwords come from `SEED_PASSWORD`; the seed refuses to run in production without it.
+**Database setup.** `prisma migrate deploy` applies committed migrations (`init`, `surveys`, `responses`); migrations only add tables/columns so an older image still works after a rollback (Lab 5). The `responses` migration adds a hand-written CHECK constraint `Answer_ratingValue_range` (1–5). `npm run prisma:seed` is idempotent (existing users and surveys are kept) and creates 2 owners (password `ADMIN_PASSWORD`); when `SEED_DEMO_DATA=true` it also creates 3 respondents (password `DEMO_USER_PASSWORD`), one published sample survey ("Dinner experience at Donjai Siam") and one draft. The seed stops with an error if a required password variable is missing.
 
 ## 3. UI structure and conventions
 
@@ -126,13 +126,14 @@ Ownership is enforced in the query itself (`where: { id, ownerId: currentUser.id
 | Variable | Purpose | Secret | Local source | Cloud source (Lab 5) |
 |---|---|---|---|---|
 | DATABASE_URL | PostgreSQL connection | Yes | `server/.env` | Secret Manager |
-| TEST_DATABASE_URL | Test DB (must end `_test`) | No (local) | `server/.env` | CI service container |
+| TEST_DATABASE_URL | Test DB (name must end `_test`) | No (local) | `server/.env` | not used (CI uses its throw-away `DATABASE_URL`) |
 | PORT | HTTP port | No | default 3000 | set by Cloud Run |
 | NODE_ENV | `development` / `production` / `test` | No | `.env` | Cloud Run env var |
 | SESSION_TTL_HOURS | Session lifetime | No | default 8 | env var |
 | BCRYPT_COST | bcrypt cost (≥ 10) | No | default 10 | env var |
-| CLIENT_ORIGIN | Allowed CORS origin in dev | No | `http://localhost:5173` | not needed (same origin) |
-| SEED_PASSWORD | Password for seeded demo accounts | Yes | `.env` placeholder | Secret Manager |
+| ADMIN_PASSWORD | Initial password of the seeded survey owners | Yes | `.env` (your own value) | Secret Manager (generated) |
+| DEMO_USER_PASSWORD | Password of the seeded demo respondents | Yes | `.env` (your own value) | Secret Manager (generated) |
+| SEED_DEMO_DATA | Create demo respondents and sample surveys | No | `true` | `true` for the Lab 6 UAT demo |
 
 `.env` is in `.gitignore`; only `.env.example` with placeholders is committed. No secret is placed in client code (Vite only exposes `VITE_*` variables, none of which are secret).
 
@@ -148,3 +149,4 @@ Ownership is enforced in the query itself (`where: { id, ownerId: currentUser.id
 | Version | Date | Change | Author |
 |---|---|---|---|
 | 1.0 | 2026-11-13 | Initial system design for Sprint 1 baseline | Team EN-020 T&T |
+| 1.1 | 2026-11-14 | Implementation alignment: Prisma 7 with the pg driver adapter; seed variables `ADMIN_PASSWORD`, `DEMO_USER_PASSWORD`, `SEED_DEMO_DATA` replace `SEED_PASSWORD` (same names as the Lab 5 Starter Kit); `CLIENT_ORIGIN` removed because the Vite dev proxy and the production build are same-origin; `summary.ts` added to the domain layer. | Team EN-020 T&T |

@@ -1,10 +1,11 @@
-/** Survey owner API: F-03 authoring, F-04 lifecycle (and F-06 summary later). */
+/** Survey owner API: F-03 authoring, F-04 lifecycle, F-06 summary. */
 import { Router } from "express";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { AppError, notFound, validationFailed } from "../lib/errors";
 import { canTransition, validateSurveyInput, type LifecycleAction, type SurveyInput } from "../domain/surveyRules";
+import { buildSummary } from "../domain/summary";
 
 export const ownerRouter = Router();
 ownerRouter.use(requireAuth, requireRole("SURVEY_OWNER"));
@@ -166,4 +167,30 @@ ownerRouter.post("/surveys/:id/close", async (req, res) => {
   const id = parseId(req.params.id);
   await transition(id, req.user!.id, "close");
   res.json(await detailResponse(id));
+});
+
+// FR-12 / F-06: aggregate summary of an own survey (BR-06)
+ownerRouter.get("/surveys/:id/summary", async (req, res) => {
+  const survey = await loadOwnSurvey(parseId(req.params.id), req.user!.id);
+  const [responseCount, answers] = await Promise.all([
+    prisma.response.count({ where: { surveyId: survey.id } }),
+    prisma.answer.findMany({
+      where: { response: { surveyId: survey.id } },
+      select: { questionId: true, ratingValue: true, optionId: true, textValue: true, response: { select: { submittedAt: true } } },
+    }),
+  ]);
+  res.json({
+    survey: { id: survey.id, title: survey.title, status: survey.status },
+    responseCount,
+    questions: buildSummary(
+      survey.questions.map((q) => ({
+        id: q.id,
+        position: q.position,
+        text: q.text,
+        type: q.type,
+        options: q.options.map((o) => ({ id: o.id, label: o.label })),
+      })),
+      answers.map((a) => ({ ...a, submittedAt: a.response.submittedAt }))
+    ),
+  });
 });

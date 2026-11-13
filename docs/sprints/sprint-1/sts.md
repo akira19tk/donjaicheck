@@ -1,6 +1,6 @@
 # Sprint 1 — Software Test Specification (STS)
 
-Version 1.0 (pre-implementation). Levels: **U** = unit (pure function), **API** = API + database integration (Vitest + Supertest against `TEST_DATABASE_URL`, data reset per test file), **E2E** = Playwright through the browser, **M** = manual check.
+Version 1.1 (1.0 pre-implementation; 1.1 adds the test-file mapping). Levels: **U** = unit (pure function), **API** = API + database integration (Vitest + Supertest against `TEST_DATABASE_URL`, data reset per test file), **E2E** = Playwright through the browser, **M** = manual check.
 
 Seed for API tests: owner A, owner B, respondent R1, respondent R2 (created by a test fixture, password from env).
 
@@ -43,6 +43,23 @@ Seed for API tests: owner A, owner B, respondent R1, respondent R2 (created by a
 | TEST-E2E-01 | AC-05-02, AC-06-01 | E2E | Seeded owner and respondent | Owner creates + publishes survey → respondent logs in, answers, sees confirmation → owner opens summary | Each page shows expected text; summary shows 1 response |
 | TEST-E2E-02 | AC-05-06 | E2E | Seeded published survey | Respondent submits with a required question empty | Error shown under that question; other answers kept; no navigation |
 | M-01 | NFR-06 | M | App running | Check loading, empty and error states on each list page | States visible and readable |
+
+## Test files (implementation)
+
+| Test IDs | File |
+|---|---|
+| TEST-01-01…07 | `server/tests/api/f01-auth.test.ts` |
+| TEST-02-01, TEST-02-02 | `server/tests/api/f02-access.test.ts` (driven by `tests/helpers/routes.ts`) |
+| TEST-02-03 | `server/tests/api/f02-ownership.test.ts` |
+| TEST-03-01…06 | `server/tests/api/f03-authoring.test.ts` (+ extended TEST-03-06 in `f05-response.test.ts`) |
+| TEST-04-01…04 | `server/tests/api/f04-lifecycle.test.ts` |
+| TEST-05-01…08 | `server/tests/api/f05-response.test.ts` |
+| TEST-06-01…03 | `server/tests/api/f06-summary.test.ts` |
+| TEST-U-01, TEST-U-03 | `server/tests/unit/surveyRules.test.ts` |
+| TEST-U-02 | `server/tests/unit/responseRules.test.ts` |
+| (supporting) summary aggregation | `server/tests/unit/summary.test.ts` |
+| TEST-E2E-01, TEST-E2E-02 | `e2e/journey.spec.ts` |
+| UI behaviour (NFR-06) | `client/tests/*.test.tsx` |
 
 ## Execution
 - `cd server && npm test` — unit + API tests (requires `TEST_DATABASE_URL`).

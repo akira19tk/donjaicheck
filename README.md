@@ -56,6 +56,14 @@ cd server && npm test     # unit + API/database tests (uses TEST_DATABASE_URL, w
 cd client && npm test     # UI unit tests
 ```
 
+End-to-end journeys (TEST-E2E-01/02) run in a real browser against the development database and the seeded demo accounts:
+
+```bash
+npm install                 # at the repository root (Playwright)
+npx playwright install chromium   # once
+npm run e2e                 # builds client + server, starts on :3100, runs e2e/journey.spec.ts
+```
+
 Server tests delete all rows in the test database before each file, so `TEST_DATABASE_URL` must point to a separate database. In CI (`CI=true`) the throw-away `DATABASE_URL` service database is used.
 
 ## Build
