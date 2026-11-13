@@ -4,7 +4,10 @@ import { Layout } from "./components/Layout";
 import { RequireRole } from "./components/RequireRole";
 import { Loading } from "./components/ui";
 import { LoginPage } from "./pages/LoginPage";
-import { OwnerHome, RespondentHome } from "./pages/Placeholder";
+import { RespondentHome } from "./pages/Placeholder";
+import { MySurveysPage } from "./pages/owner/MySurveysPage";
+import { SurveyDetailPage } from "./pages/owner/SurveyDetailPage";
+import { SurveyEditorPage } from "./pages/owner/SurveyEditorPage";
 
 function Home() {
   const { user, loading } = useAuth();
@@ -18,7 +21,10 @@ export function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<RequireRole role="SURVEY_OWNER" />}>
         <Route element={<Layout />}>
-          <Route path="/owner/surveys" element={<OwnerHome />} />
+          <Route path="/owner/surveys" element={<MySurveysPage />} />
+          <Route path="/owner/surveys/new" element={<SurveyEditorPage />} />
+          <Route path="/owner/surveys/:id" element={<SurveyDetailPage />} />
+          <Route path="/owner/surveys/:id/edit" element={<SurveyEditorPage />} />
         </Route>
       </Route>
       <Route element={<RequireRole role="RESPONDENT" />}>
