@@ -82,6 +82,12 @@ describe("F-05 list and submit", () => {
     expect(res.status).toBe(404);
     expect(await prisma.response.count({ where: { surveyId: s.id } })).toBe(0);
     expect((await api.get(`/api/surveys/${s.id}`, cookie1)).status).toBe(404);
+
+    // Control: the same survey and answers are accepted once it is PUBLISHED,
+    // so the 404 above comes from the DRAFT status rule, not from a missing route.
+    await prisma.survey.update({ where: { id: s.id }, data: { status: "PUBLISHED", publishedAt: new Date() } });
+    const control = await api.post(`/api/surveys/${s.id}/responses`, { answers: answersFor(s) }, cookie1);
+    expect(control.status).toBe(201);
   });
 
   it("TEST-05-05 a CLOSED survey rejects responses with 409 SURVEY_NOT_OPEN", async () => {
