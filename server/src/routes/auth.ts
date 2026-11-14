@@ -12,10 +12,12 @@ import { requireAuth, SESSION_COOKIE } from "../middleware/auth";
 
 export const authRouter = Router();
 
+// Secure cookies in production (Cloud Run is HTTPS). COOKIE_SECURE=false allows the
+// production build to run over plain http://localhost in docker compose.
 const cookieOptions = () => ({
   httpOnly: true,
   sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
+  secure: process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE !== "false",
   path: "/",
 });
 
