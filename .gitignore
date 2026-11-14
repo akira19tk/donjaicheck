@@ -151,3 +151,6 @@ vite.config.ts.timestamp-*
 # Playwright
 test-results/
 playwright-report/
+
+# Python bytecode from deploy/tests
+__pycache__/
