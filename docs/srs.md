@@ -3,7 +3,7 @@
 | Item | Value |
 |---|---|
 | Course | CPE334 Software Engineering, Semester 1/2026 |
-| Team | EN-020 T&T — Thanyagorn (67070503416), Thanaporn (67070503490) |
+| Team | EN-020 T&T — Thanyagorn (67070503490), Thanaporn (67070503416) |
 | Theme | 10. Review, Feedback, and Survey System |
 | Version | 1.0 (Sprint 1 baseline) |
 
