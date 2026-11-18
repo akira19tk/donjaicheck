@@ -35,6 +35,9 @@ export function Layout() {
       <main className="page">
         <Outlet />
       </main>
+      <footer className="footer">
+        Donjaicheck · Your feedback helps Donjai Kitchen serve you better.
+      </footer>
     </div>
   );
 }
