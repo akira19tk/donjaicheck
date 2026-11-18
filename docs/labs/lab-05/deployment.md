@@ -65,7 +65,7 @@ Changes from the kit:
 | GitHub environment | `demo` (deploy from `main` only; variables `GCP_PROJECT_ID`, `GCP_REGION`, `WIF_PROVIDER`, `WIF_SERVICE_ACCOUNT`) |
 | Workload Identity | pool `github-actions`, provider `github-main`, condition limited to this repository, `main` and `deploy.yml` |
 | Budget | `lab5-budget`, ฿350/month, alerts at 50/90/100 % |
-| Public URL | _fill in after the first deploy_ |
+| Public URL | https://donjaicheck-kkb2behi3a-as.a.run.app |
 
 ## 5. Release procedure
 
