@@ -5,7 +5,8 @@ describe("health endpoints", () => {
   it("GET /api/health returns ok", async () => {
     const res = await api.get("/api/health");
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ status: "ok" });
+    // Lab 5 Ep6.6: intentionally broken to prove the merge gate. DO NOT MERGE.
+    expect(res.body).toEqual({ status: "broken-on-purpose" });
   });
 
   it("GET /api/ready reports the database as connected", async () => {
