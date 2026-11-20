@@ -174,7 +174,7 @@ For each step group record: case ID, tester name/team, date-time, tested URL + r
 
 ## 6. Reporting a finding
 
-Open a GitHub Issue at https://github.com/akira19tk/donjaicheck/issues/new with label `lab6-uat` (or send the same fields in the LINE group if you cannot open Issues):
+Open a GitHub Issue at https://github.com/akira19tk/donjaicheck/issues/new with label `lab6-uat` (or send the same fields through the private chat if you cannot open Issues):
 Title `[UAT] <short summary>` · tested revision · linked case/step and requirement · preconditions/data · steps to reproduce · expected · actual · severity (Critical / Major / Minor / Enhancement suggestion) and why · screenshot.
 
 Severity guide: **Critical** — data of another user is exposed or changed, or the main journey cannot be completed; **Major** — a Sprint 1 rule (BR-01…BR-08) or AC is broken with a workaround; **Minor** — wording, layout or message issue that does not break a rule.
