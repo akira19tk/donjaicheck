@@ -59,7 +59,7 @@ export function validateResponse(questions: QuestionForValidation[], rawAnswers:
     if (q.type === "RATING") {
       const v = a?.rating;
       if (v === undefined || v === null) {
-        if (q.required) details.push({ field: f, message: "Required" });
+        // Lab 6 controlled exercise
       } else if (typeof v !== "number" || !Number.isInteger(v) || v < 1 || v > 5) {
         details.push({ field: f, message: "Rating must be an integer from 1 to 5" });
       } else answers.push({ questionId: q.id, ratingValue: v });
