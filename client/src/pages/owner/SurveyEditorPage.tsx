@@ -32,6 +32,8 @@ export function SurveyEditorPage() {
   const [loading, setLoading] = useState(editing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set when the survey cannot be edited at all (not found / not own / not a draft): show only the message, no form.
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export function SurveyEditorPage() {
     apiFetch<{ survey: SurveyDetail }>(`/api/owner/surveys/${id}`)
       .then(({ survey }) => {
         if (survey.status !== "DRAFT") {
-          setError("Only draft surveys can be edited.");
+          setLoadError("Only draft surveys can be edited.");
           return;
         }
         setTitle(survey.title);
@@ -54,7 +56,7 @@ export function SurveyEditorPage() {
           }))
         );
       })
-      .catch((e: Error) => setError(e.message))
+      .catch((e: Error) => setLoadError(e instanceof ApiError && e.status === 404 ? "Survey not found." : e.message))
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -100,6 +102,15 @@ export function SurveyEditorPage() {
   };
 
   if (loading) return <Loading />;
+  if (loadError)
+    return (
+      <section>
+        <ErrorBanner message={loadError} />
+        <Link className="btn btn-ghost" to="/owner/surveys">
+          Back to My surveys
+        </Link>
+      </section>
+    );
 
   return (
     <section>
