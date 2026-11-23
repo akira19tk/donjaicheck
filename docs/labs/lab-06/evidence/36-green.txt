@@ -1,0 +1,23 @@
+# GREEN on 88852b9 + fix-36.patch (same code as 28bdf75), 2026-11-24 02:08:30 +07
+
+ RUN  v4.0.18 /Users/nineoneakira/Desktop/CPE334/donjaicheck/client
+
+ ✓ tests/api.test.ts > apiFetch > sends the CSRF header and credentials on POST 6ms
+ ✓ tests/api.test.ts > apiFetch > turns an API error into ApiError with field details 1ms
+ ✓ tests/SummaryPage.test.tsx > SummaryPage (F-06 UI) > shows the empty state when there are no responses (AC-06-02) 45ms
+ ✓ tests/uat-regression.test.tsx > Lab 6 UAT findings > UAT-36 (BR-06, AC-02-03): another owner's survey edit URL shows only 'Survey not found.' and no editable form 38ms
+ ✓ tests/uat-regression.test.tsx > Lab 6 UAT findings > UAT-36 (BR-02): a published survey's edit URL shows only 'Only draft surveys can be edited.' and no editable form 7ms
+ ✓ tests/SummaryPage.test.tsx > SummaryPage (F-06 UI) > shows the average and option counts 166ms
+ ✓ tests/uat-regression.test.tsx > Lab 6 UAT findings > control: the owner's own draft still opens in the editor with its content 162ms
+Not implemented: Window's scrollTo() method
+ ✓ tests/SurveyEditorPage.test.tsx > SurveyEditorPage (F-03 UI, NFR-06) > shows the API field errors next to the fields 208ms
+ ✓ tests/SurveyEditorPage.test.tsx > SurveyEditorPage (F-03 UI, NFR-06) > adds option rows for a single choice question 54ms
+ ✓ tests/AnswerSurveyPage.test.tsx > AnswerSurveyPage (AC-05-06) > shows the error under the missing required question and keeps the other answers 255ms
+ ✓ tests/AnswerSurveyPage.test.tsx > AnswerSurveyPage (AC-05-06) > shows a closed message instead of the form for a CLOSED survey 4ms
+ ✓ tests/LoginPage.test.tsx > LoginPage (F-01 UI) > shows the API error message when the credentials are wrong 295ms
+
+ Test Files  6 passed (6)
+      Tests  12 passed (12)
+   Start at  02:07:18
+   Duration  1.24s (transform 314ms, setup 487ms, import 737ms, tests 1.25s, environment 3.46s)
+
