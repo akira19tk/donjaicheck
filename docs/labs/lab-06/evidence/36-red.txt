@@ -1,0 +1,686 @@
+# RED on bc50125c2f4fc8c6a8ded0f21d203f689c1a2e37, 2026-11-24 02:00:42 +07
+
+ RUN  v4.0.18 /Users/nineoneakira/Desktop/CPE334/donjaicheck/client
+
+ × tests/uat-regression.test.tsx > Lab 6 UAT findings > UAT-36 (BR-06, AC-02-03): another owner's survey edit URL shows only 'Survey not found.' and no editable form 1030ms
+   → Unable to find an element with the text: Survey not found.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"page-head"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mEdit draft survey[0m
+        [36m</h1>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"btn btn-ghost"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/owner/surveys/6"[39m
+        [36m>[39m
+          [0mCancel[0m
+        [36m</a>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"banner banner-error"[39m
+        [33mrole[39m=[32m"alert"[39m
+      [36m>[39m
+        [0mNot found[0m
+      [36m</div>[39m
+      [36m<form[39m
+        [33mclass[39m=[32m"card"[39m
+        [33mnovalidate[39m=[32m""[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"field "[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mTitle *[0m
+          [36m</span>[39m
+          [36m<input[39m
+            [33mmaxlength[39m=[32m"120"[39m
+            [33mplaceholder[39m=[32m"e.g. Dinner experience at Donjai Siam"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"field "[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mDescription[0m
+          [36m</span>[39m
+          [36m<textarea[39m
+            [33mmaxlength[39m=[32m"500"[39m
+            [33mrows[39m=[32m"2"[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<h2>[39m
+          [0mQuestions ([0m
+          [0m1[0m
+          [0m/20)[0m
+        [36m</h2>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"question-card"[39m
+          [33mdata-testid[39m=[32m"question-0"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"question-head"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"field "[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mQuestion [0m
+                [0m1[0m
+                [0m *[0m
+              [36m</span>[39m
+              [36m<input[39m
+                [33mmaxlength[39m=[32m"200"[39m
+                [33mvalue[39m=[32m""[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"field"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mType[0m
+              [36m</span>[39m
+              [36m<select>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"RATING"[39m
+                [36m>[39m
+                  [0mRating 1–5[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"SINGLE_CHOICE"[39m
+                [36m>[39m
+                  [0mSingle choice[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"TEXT"[39m
+                [36m>[39m
+                  [0mShort text[0m
+                [36m</option>[39m
+              [36m</select>[39m
+            [36m</label>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"actions"[39m
+            [33mstyle[39m=[32m"margin-top: 0.6rem; align-items: center;"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"checkbox"[39m
+            [36m>[39m
+              [36m<input[39m
+                [33mchecked[39m=[32m""[39m
+                [33mtype[39m=[32m"checkbox"[39m
+              [36m/>[39m
+              [0mRequired[0m
+            [36m</label>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m↑[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m↓[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small btn-danger"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mDelete question[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"actions"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m+ Add question[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn-primary"[39m
+            [33mtype[39m=[32m"submit"[39m
+          [36m>[39m
+            [0mSave draft[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</form>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"page-head"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mEdit draft survey[0m
+        [36m</h1>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"btn btn-ghost"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/owner/surveys/6"[39m
+        [36m>[39m
+          [0mCancel[0m
+        [36m</a>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"banner banner-error"[39m
+        [33mrole[39m=[32m"alert"[39m
+      [36m>[39m
+        [0mNot found[0m
+      [36m</div>[39m
+      [36m<form[39m
+        [33mclass[39m=[32m"card"[39m
+        [33mnovalidate[39m=[32m""[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"field "[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mTitle *[0m
+          [36m</span>[39m
+          [36m<input[39m
+            [33mmaxlength[39m=[32m"120"[39m
+            [33mplaceholder[39m=[32m"e.g. Dinner experience at Donjai Siam"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"field "[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mDescription[0m
+          [36m</span>[39m
+          [36m<textarea[39m
+            [33mmaxlength[39m=[32m"500"[39m
+            [33mrows[39m=[32m"2"[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<h2>[39m
+          [0mQuestions ([0m
+          [0m1[0m
+          [0m/20)[0m
+        [36m</h2>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"question-card"[39m
+          [33mdata-testid[39m=[32m"question-0"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"question-head"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"field "[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mQuestion [0m
+                [0m1[0m
+                [0m *[0m
+              [36m</span>[39m
+              [36m<input[39m
+                [33mmaxlength[39m=[32m"200"[39m
+                [33mvalue[39m=[32m""[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"field"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mType[0m
+              [36m</span>[39m
+              [36m<select>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"RATING"[39m
+                [36m>[39m
+                  [0mRating 1–5[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"SINGLE_CHOICE"[39m
+                [36m>[39m
+                  [0mSingle choice[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"TEXT"[39m
+                [36m>[39m
+                  [0mShort text[0m
+                [36m</option>[39m
+              [36m</select>[39m
+            [36m</label>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"actions"[39m
+            [33mstyle[39m=[32m"margin-top: 0.6rem; align-items: center;"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"checkbox"[39m
+            [36m>[39m
+              [36m<input[39m
+                [33mchecked[39m=[32m""[39m
+                [33mtype[39m=[32m"checkbox"[39m
+              [36m/>[39m
+              [0mRequired[0m
+            [36m</label>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m↑[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m↓[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small btn-danger"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mDelete question[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"actions"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m+ Add question[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn-primary"[39m
+            [33mtype[39m=[32m"submit"[39m
+          [36m>[39m
+            [0mSave draft[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</form>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ × tests/uat-regression.test.tsx > Lab 6 UAT findings > UAT-36 (BR-02): a published survey's edit URL shows only 'Only draft surveys can be edited.' and no editable form 95ms
+   → expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  class="btn btn-primary"
+  type="submit"
+>
+  Save draft
+</button> instead
+ ✓ tests/uat-regression.test.tsx > Lab 6 UAT findings > control: the owner's own draft still opens in the editor with its content 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/uat-regression.test.tsx > Lab 6 UAT findings > UAT-36 (BR-06, AC-02-03): another owner's survey edit URL shows only 'Survey not found.' and no editable form
+TestingLibraryElementError: Unable to find an element with the text: Survey not found.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"page-head"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mEdit draft survey[0m
+        [36m</h1>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"btn btn-ghost"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/owner/surveys/6"[39m
+        [36m>[39m
+          [0mCancel[0m
+        [36m</a>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"banner banner-error"[39m
+        [33mrole[39m=[32m"alert"[39m
+      [36m>[39m
+        [0mNot found[0m
+      [36m</div>[39m
+      [36m<form[39m
+        [33mclass[39m=[32m"card"[39m
+        [33mnovalidate[39m=[32m""[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"field "[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mTitle *[0m
+          [36m</span>[39m
+          [36m<input[39m
+            [33mmaxlength[39m=[32m"120"[39m
+            [33mplaceholder[39m=[32m"e.g. Dinner experience at Donjai Siam"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"field "[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mDescription[0m
+          [36m</span>[39m
+          [36m<textarea[39m
+            [33mmaxlength[39m=[32m"500"[39m
+            [33mrows[39m=[32m"2"[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<h2>[39m
+          [0mQuestions ([0m
+          [0m1[0m
+          [0m/20)[0m
+        [36m</h2>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"question-card"[39m
+          [33mdata-testid[39m=[32m"question-0"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"question-head"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"field "[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mQuestion [0m
+                [0m1[0m
+                [0m *[0m
+              [36m</span>[39m
+              [36m<input[39m
+                [33mmaxlength[39m=[32m"200"[39m
+                [33mvalue[39m=[32m""[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"field"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mType[0m
+              [36m</span>[39m
+              [36m<select>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"RATING"[39m
+                [36m>[39m
+                  [0mRating 1–5[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"SINGLE_CHOICE"[39m
+                [36m>[39m
+                  [0mSingle choice[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"TEXT"[39m
+                [36m>[39m
+                  [0mShort text[0m
+                [36m</option>[39m
+              [36m</select>[39m
+            [36m</label>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"actions"[39m
+            [33mstyle[39m=[32m"margin-top: 0.6rem; align-items: center;"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"checkbox"[39m
+            [36m>[39m
+              [36m<input[39m
+                [33mchecked[39m=[32m""[39m
+                [33mtype[39m=[32m"checkbox"[39m
+              [36m/>[39m
+              [0mRequired[0m
+            [36m</label>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m↑[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m↓[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small btn-danger"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mDelete question[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"actions"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m+ Add question[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn-primary"[39m
+            [33mtype[39m=[32m"submit"[39m
+          [36m>[39m
+            [0mSave draft[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</form>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"page-head"[39m
+      [36m>[39m
+        [36m<h1>[39m
+          [0mEdit draft survey[0m
+        [36m</h1>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"btn btn-ghost"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/owner/surveys/6"[39m
+        [36m>[39m
+          [0mCancel[0m
+        [36m</a>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"banner banner-error"[39m
+        [33mrole[39m=[32m"alert"[39m
+      [36m>[39m
+        [0mNot found[0m
+      [36m</div>[39m
+      [36m<form[39m
+        [33mclass[39m=[32m"card"[39m
+        [33mnovalidate[39m=[32m""[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"field "[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mTitle *[0m
+          [36m</span>[39m
+          [36m<input[39m
+            [33mmaxlength[39m=[32m"120"[39m
+            [33mplaceholder[39m=[32m"e.g. Dinner experience at Donjai Siam"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"field "[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mDescription[0m
+          [36m</span>[39m
+          [36m<textarea[39m
+            [33mmaxlength[39m=[32m"500"[39m
+            [33mrows[39m=[32m"2"[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<h2>[39m
+          [0mQuestions ([0m
+          [0m1[0m
+          [0m/20)[0m
+        [36m</h2>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"question-card"[39m
+          [33mdata-testid[39m=[32m"question-0"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"question-head"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"field "[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mQuestion [0m
+                [0m1[0m
+                [0m *[0m
+              [36m</span>[39m
+              [36m<input[39m
+                [33mmaxlength[39m=[32m"200"[39m
+                [33mvalue[39m=[32m""[39m
+              [36m/>[39m
+            [36m</label>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"field"[39m
+            [36m>[39m
+              [36m<span>[39m
+                [0mType[0m
+              [36m</span>[39m
+              [36m<select>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"RATING"[39m
+                [36m>[39m
+                  [0mRating 1–5[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"SINGLE_CHOICE"[39m
+                [36m>[39m
+                  [0mSingle choice[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"TEXT"[39m
+                [36m>[39m
+                  [0mShort text[0m
+                [36m</option>[39m
+              [36m</select>[39m
+            [36m</label>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"actions"[39m
+            [33mstyle[39m=[32m"margin-top: 0.6rem; align-items: center;"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"checkbox"[39m
+            [36m>[39m
+              [36m<input[39m
+                [33mchecked[39m=[32m""[39m
+                [33mtype[39m=[32m"checkbox"[39m
+              [36m/>[39m
+              [0mRequired[0m
+            [36m</label>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m↑[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m↓[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"btn btn-small btn-danger"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mDelete question[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"actions"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m+ Add question[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"btn btn-primary"[39m
+            [33mtype[39m=[32m"submit"[39m
+          [36m>[39m
+            [0mSave draft[0m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</form>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ tests/uat-regression.test.tsx:42:25
+     40|     mockGet(404, { error: "Not found", code: "NOT_FOUND" });
+     41|     renderEditAt("/owner/surveys/6/edit");
+     42|     expect(await screen.findByText("Survey not found.")).toBeInTheDocu…
+       |                         ^
+     43|     expect(screen.queryByText("Not found")).not.toBeInTheDocument();
+     44|     expect(screen.queryByRole("button", { name: /save draft/i })).not.…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/uat-regression.test.tsx > Lab 6 UAT findings > UAT-36 (BR-02): a published survey's edit URL shows only 'Only draft surveys can be edited.' and no editable form
+Error: expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  class="btn btn-primary"
+  type="submit"
+>
+  Save draft
+</button> instead
+ ❯ tests/uat-regression.test.tsx:52:71
+     50|     renderEditAt("/owner/surveys/6/edit");
+     51|     expect(await screen.findByText("Only draft surveys can be edited."…
+     52|     expect(screen.queryByRole("button", { name: /save draft/i })).not.…
+       |                                                                       ^
+     53|     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+     54|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  02:00:33
+   Duration  1.57s (transform 54ms, setup 38ms, import 86ms, tests 1.14s, environment 226ms)
+

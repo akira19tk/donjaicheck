@@ -9,7 +9,7 @@
 | Release under test | tag `uat-s1` → `main` commit `4bcd6e6` (PR #30) |
 | Deployed URL | https://donjaicheck-kkb2behi3a-as.a.run.app |
 | Deployed revision | Cloud Run image tag `4bcd6e6…` (full SHA in the Actions run Summary of *Deploy demo*) |
-| UAT Team | To be confirmed — recorded in Issue #32 and in the Lab 6 report once the pairing is agreed |
+| UAT Team | Napat Tantipibulsap (67070503411), Chutipon Homsuwan (67070503463) |
 
 **Why `4bcd6e6` and not `022a45e`.** Commits after `sprint-1` are Lab 5 delivery work: Docker, CI, the deploy workflow and docs, a cookie `secure` switch for local Docker (`server/src/routes/auth.ts`) and a footer line in the UI (`Layout.tsx`, `styles.css`). No Sprint 1 requirement, API contract or business rule changed: `git diff --stat sprint-1 uat-s1 -- server/src client/src server/prisma` lists only those three files.
 
@@ -38,7 +38,7 @@ In scope: FR-01 … FR-12, BR-01 … BR-08, NFR-02, NFR-06 (see `docs/srs.md`, a
 | CUST-2 | customer2@donjai.test | RESPONDENT | UAT-02 |
 | CUST-3 | customer3@donjai.test | RESPONDENT | UAT-03, UAT-04 |
 
-All data is synthetic. Use a **private/incognito window per account** (or sign out between accounts) so two sessions do not mix.
+All data is synthetic. Use a **private/incognito window per account** (or click **Log out** between accounts) so two sessions do not mix.
 
 ## 3. Data setup, sequence and cleanup
 
@@ -67,8 +67,8 @@ Expected results are written so that you do not need any verbal explanation. Rec
 1. Sign in as OWNER-A.
 2. Click **New survey**, enter the title and the three questions above (click **+ Add option** for the third option), click **Save draft**.
 3. On the survey page, note the survey ID from the address bar (= S). Click **Publish** and confirm.
-4. Sign out. Sign in as CUST-1 (new private window is fine).
-5. In **Available surveys**, open survey S, enter CUST-1's answers, click **Submit answers**.
+4. Click **Log out**. Sign in as CUST-1 (new private window is fine).
+5. In **Available surveys**, click **Answer** on survey S, enter CUST-1's answers, click **Submit answers**.
 6. Note the response ID from the address bar (= R1).
 7. Sign in as OWNER-A, open S, click the summary/results link.
 
@@ -91,10 +91,10 @@ Expected results are written so that you do not need any verbal explanation. Rec
 
 **Steps**
 
-1. **(a) Required answer.** Sign in as CUST-2, open S, leave Q1 empty, choose Green curry, type `Friendly staff`, click **Submit answers**.
+1. **(a) Required answer.** Sign in as CUST-2, click **Answer** on S, leave Q1 empty, choose Green curry, type `Friendly staff`, click **Submit answers**.
 2. Without reloading, select 5 for Q1 and click **Submit answers** again.
 3. **(b) One response per customer.** Sign in as CUST-1, open **Available surveys**.
-4. Open S from the list, or type `/surveys/<S>` in the address bar.
+4. Click the S entry in the list, or type `/surveys/<S>` in the address bar.
 5. **(c) Invalid options.** Sign in as OWNER-A, click **New survey**, enter the draft title and the question with two options both `Indoor`, click **Save draft**.
 6. Open **My surveys**.
 7. Open the summary of S.
@@ -157,7 +157,7 @@ Expected results are written so that you do not need any verbal explanation. Rec
 3. Open **My surveys**.
 4. Sign in as CUST-3, open **Available surveys**. Then type `…/surveys/<S>`.
 5. Sign in as CUST-1, open `…/responses/<R1>`.
-6. Sign out, close the browser window, sign in again as OWNER-A and open the summary of S.
+6. Click **Log out**, close the browser window, sign in again as OWNER-A and open the summary of S.
 
 **Expected results**
 
