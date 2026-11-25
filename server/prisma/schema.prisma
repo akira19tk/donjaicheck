@@ -64,8 +64,11 @@ model Survey {
   closedAt    DateTime?
   // F-08 (BR-11): optional scheduled closing time
   closesAt    DateTime?
+  // F-07 (BR-09): answering requires an unused visit code of this survey
+  requiresVisitCode Boolean  @default(false)
   questions   Question[]
   responses   Response[]
+  visitCodes  VisitCode[]
 
   @@index([ownerId])
   @@index([status])
@@ -108,6 +111,7 @@ model Response {
   respondent   User     @relation(fields: [respondentId], references: [id])
   submittedAt  DateTime @default(now())
   answers      Answer[]
+  visitCode    VisitCode?
 
   @@unique([surveyId, respondentId])
   @@index([respondentId])
@@ -127,4 +131,20 @@ model Answer {
 
   @@unique([responseId, questionId])
   @@index([questionId])
+}
+
+// F-07 ---------------------------------------------------------------------
+
+// BR-09: single-use code printed on a receipt. Consumed in the same transaction as the response.
+model VisitCode {
+  id         Int       @id @default(autoincrement())
+  surveyId   Int
+  survey     Survey    @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  code       String    @unique @db.VarChar(8)
+  createdAt  DateTime  @default(now())
+  usedAt     DateTime?
+  responseId Int?      @unique
+  response   Response? @relation(fields: [responseId], references: [id], onDelete: SetNull)
+
+  @@index([surveyId, usedAt])
 }
