@@ -41,6 +41,7 @@ export function MySurveysPage() {
                 <div className="meta">
                   <StatusBadge status={s.status} /> · {s.responseCount} response{s.responseCount === 1 ? "" : "s"} · created{" "}
                   {formatDate(s.createdAt)}
+                  {s.status !== "CLOSED" && s.closesAt && <> · closes {formatDate(s.closesAt)}</>}
                 </div>
               </div>
               <div className="actions">

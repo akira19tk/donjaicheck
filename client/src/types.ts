@@ -24,6 +24,7 @@ export interface SurveyDetail {
   createdAt: string;
   publishedAt: string | null;
   closedAt: string | null;
+  closesAt: string | null;
   responseCount: number;
   questions: Question[];
 }
@@ -36,6 +37,7 @@ export interface SurveyListItem {
   createdAt: string;
   publishedAt: string | null;
   closedAt: string | null;
+  closesAt: string | null;
 }
 
 export const TYPE_LABEL: Record<QuestionType, string> = {
@@ -46,3 +48,14 @@ export const TYPE_LABEL: Record<QuestionType, string> = {
 
 export const formatDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "—";
+
+/** ISO (UTC) -> value for <input type="datetime-local"> in the browser's local time zone. */
+export const toLocalInput = (iso: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+/** <input type="datetime-local"> value (local time) -> ISO string, or null when empty. */
+export const fromLocalInput = (value: string) => (value ? new Date(value).toISOString() : null);
