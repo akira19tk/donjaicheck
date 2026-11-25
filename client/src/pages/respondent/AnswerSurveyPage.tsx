@@ -11,6 +11,7 @@ interface RespondentSurvey {
   description: string;
   status: SurveyStatus;
   closesAt?: string | null;
+  requiresVisitCode?: boolean;
   questions: Question[];
 }
 
@@ -23,6 +24,7 @@ export function AnswerSurveyPage() {
   const [survey, setSurvey] = useState<RespondentSurvey | null>(null);
   const [responseId, setResponseId] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Record<number, AnswerValue>>({});
+  const [visitCode, setVisitCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -48,13 +50,17 @@ export function AnswerSurveyPage() {
       answers: survey.questions
         .filter((q) => answers[q.id] !== undefined)
         .map((q) => ({ questionId: q.id, ...answers[q.id] })),
+      ...(survey.requiresVisitCode ? { visitCode } : {}),
     };
     try {
       const r = await apiFetch<{ response: { id: number } }>(`/api/surveys/${survey.id}/responses`, { method: "POST", body });
       navigate(`/responses/${r.response.id}`, { state: { justSubmitted: true } });
     } catch (err) {
       if (err instanceof ApiError) {
-        setFieldErrors(Object.fromEntries(err.details.map((d) => [d.field, d.message])));
+        const fe = Object.fromEntries(err.details.map((d) => [d.field, d.message]));
+        // F-07: code problems come back as error codes, shown next to the code field.
+        if (err.code === "INVALID_VISIT_CODE" || err.code === "VISIT_CODE_USED") fe.visitCode = err.message;
+        setFieldErrors(fe);
         setError(err.code === "VALIDATION_FAILED" ? "Please answer the highlighted questions." : err.message);
       } else setError("Cannot reach the server.");
       window.scrollTo?.({ top: 0 });
@@ -76,6 +82,13 @@ export function AnswerSurveyPage() {
         <form className="card" onSubmit={onSubmit} noValidate>
           <p className="identified-note">This is an identified survey: your answers are linked to your account.</p>
           {survey.closesAt && <p className="meta">Open until {formatDate(survey.closesAt)}</p>}
+          {survey.requiresVisitCode && (
+            <label className={`field ${fieldErrors.visitCode ? "has-error" : ""}`}>
+              <span>Visit code (printed on your receipt) *</span>
+              <input value={visitCode} onChange={(e) => setVisitCode(e.target.value)} placeholder="AB3K-9QXZ" maxLength={12} autoComplete="off" />
+              {fieldErrors.visitCode && <small className="field-error">{fieldErrors.visitCode}</small>}
+            </label>
+          )}
           <ErrorBanner message={error} />
           {survey.questions.map((q) => {
             const err = fieldErrors[`answers[q:${q.id}]`];

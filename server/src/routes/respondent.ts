@@ -7,10 +7,14 @@ import { AppError, notFound, validationFailed } from "../lib/errors";
 import { validateResponse } from "../domain/responseRules";
 import { parseId } from "./owner";
 import { closeExpired } from "../lib/closeExpired";
+import { normalizeVisitCode } from "../domain/visitCodes";
 
 export const respondentRouter = Router();
 // Guards are per route (this router is mounted on /api, so a router-wide guard would catch every /api path).
 const respondentRole = requireRole("RESPONDENT");
+
+const invalidVisitCode = () => new AppError(400, "INVALID_VISIT_CODE", "This visit code is not valid for this survey");
+const visitCodeUsed = () => new AppError(409, "VISIT_CODE_USED", "This visit code has already been used");
 
 const alreadyResponded = () => new AppError(409, "ALREADY_RESPONDED", "You have already answered this survey");
 
@@ -53,6 +57,7 @@ respondentRouter.get("/surveys/:id", requireAuth, respondentRole, closeExpired, 
       description: survey.description,
       status: survey.status,
       closesAt: survey.closesAt,
+      requiresVisitCode: survey.requiresVisitCode,
       questions: survey.questions.map((q) => ({
         id: q.id,
         position: q.position,
@@ -85,7 +90,24 @@ respondentRouter.post("/surveys/:id/responses", requireAuth, respondentRole, clo
     survey.questions.map((q) => ({ id: q.id, type: q.type, required: q.required, optionIds: q.options.map((o) => o.id) })),
     req.body?.answers
   ); // BR-03
-  if (!result.ok) throw validationFailed(result.details);
+  // F-07 (BR-09): a restricted survey needs a visit code; report it together with any answer problems.
+  const rawCode = req.body?.visitCode;
+  const codeMissing = survey.requiresVisitCode && (rawCode === undefined || rawCode === null || String(rawCode).trim() === "");
+  if (!result.ok || codeMissing) {
+    throw validationFailed([
+      ...(codeMissing ? [{ field: "visitCode", message: "Required" }] : []),
+      ...(result.ok ? [] : result.details),
+    ]);
+  }
+  let visitCode: string | null = null;
+  if (survey.requiresVisitCode) {
+    visitCode = normalizeVisitCode(rawCode);
+    if (!visitCode) throw invalidVisitCode();
+    // Another survey's code gets the same answer as an unknown code (does not reveal other surveys).
+    const found = await prisma.visitCode.findFirst({ where: { code: visitCode, surveyId } });
+    if (!found) throw invalidVisitCode();
+    if (found.usedAt) throw visitCodeUsed();
+  }
 
   try {
     const created = await prisma.$transaction(async (tx) => {
@@ -95,9 +117,18 @@ respondentRouter.post("/surveys/:id/responses", requireAuth, respondentRole, clo
         where: { id: surveyId, status: "PUBLISHED", OR: [{ closesAt: null }, { closesAt: { gt: new Date() } }] },
       });
       if (!open) throw new AppError(409, "SURVEY_NOT_OPEN", "This survey is closed and no longer accepts responses");
-      return tx.response.create({
+      const response = await tx.response.create({
         data: { surveyId, respondentId, answers: { create: result.answers } },
       });
+      if (visitCode) {
+        // Consume the code in the same transaction; if someone else used it a moment ago, roll everything back.
+        const consumed = await tx.visitCode.updateMany({
+          where: { code: visitCode, surveyId, usedAt: null },
+          data: { usedAt: new Date(), responseId: response.id },
+        });
+        if (consumed.count === 0) throw visitCodeUsed();
+      }
+      return response;
     });
     res.status(201).json({ response: { id: created.id, surveyId, submittedAt: created.submittedAt } });
   } catch (e) {

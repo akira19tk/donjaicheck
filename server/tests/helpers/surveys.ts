@@ -15,13 +15,14 @@ export const validSurveyBody = () => ({
 export async function makeSurvey(
   ownerId: number,
   status: "DRAFT" | "PUBLISHED" | "CLOSED" = "DRAFT",
-  opts: { withQuestions?: boolean; title?: string } = {}
+  opts: { withQuestions?: boolean; title?: string; requiresVisitCode?: boolean } = {}
 ) {
   const withQuestions = opts.withQuestions ?? true;
   return prisma.survey.create({
     data: {
       ownerId,
       title: opts.title ?? `Survey ${status}`,
+      requiresVisitCode: opts.requiresVisitCode ?? false,
       status,
       publishedAt: status === "DRAFT" ? null : new Date(),
       closedAt: status === "CLOSED" ? new Date() : null,

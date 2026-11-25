@@ -28,6 +28,7 @@ export function SurveyEditorPage() {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [requiresVisitCode, setRequiresVisitCode] = useState(false);
   const [questions, setQuestions] = useState<DraftQuestion[]>([blankQuestion()]);
   const [loading, setLoading] = useState(editing);
   const [saving, setSaving] = useState(false);
@@ -46,6 +47,7 @@ export function SurveyEditorPage() {
         }
         setTitle(survey.title);
         setDescription(survey.description);
+        setRequiresVisitCode(survey.requiresVisitCode);
         setQuestions(
           survey.questions.map((q) => ({
             key: nextKey++,
@@ -83,6 +85,7 @@ export function SurveyEditorPage() {
     const body = {
       title,
       description,
+      requiresVisitCode,
       questions: questions.map(({ text, type, required, options }) => ({ text, type, required, options })),
     };
     try {
@@ -131,6 +134,10 @@ export function SurveyEditorPage() {
           <span>Description</span>
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} maxLength={500} />
           {fieldErrors.description && <small className="field-error">{fieldErrors.description}</small>}
+        </label>
+        <label className="checkbox">
+          <input type="checkbox" checked={requiresVisitCode} onChange={(e) => setRequiresVisitCode(e.target.checked)} />
+          Require a visit code (printed on the receipt) to answer
         </label>
 
         <h2>Questions ({questions.length}/20)</h2>

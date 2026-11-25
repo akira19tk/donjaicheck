@@ -152,3 +152,5 @@ fieldset { border: none; padding: 0; margin: 0; }
 }
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.codes { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
+.codes th, .codes td { text-align: left; padding: 0.25rem 0.5rem; border-bottom: 1px solid #e5e7eb; }
