@@ -4,12 +4,12 @@
 |---|---|
 | Requirements | FR-16, BR-06, BR-13 (new), NFR-02 |
 | Depends on | F-06 (summary), F-07 / F-09 (columns for new data) |
-| Version | 1.0 (pre-implementation) |
+| Version | 1.1 (CR-01 adds `edited_at`) |
 
 ## Behaviour and workflow
 1. On the summary page of an own survey (any status) the owner presses **Download CSV**.
 2. The browser downloads `donjaicheck-survey-<id>-responses.csv` (UTF-8 with BOM so Excel shows Thai text).
-3. One row per response, oldest first. Columns: `response_id, submitted_at` (ISO UTC), `respondent_name, respondent_email` (identified surveys, decision D-03 revised as D-08), `visit_code` (only if the survey requires one), then one column per question in position order headed `Q<position> <question text>`.
+3. One row per response, oldest first. Columns: `response_id, submitted_at, edited_at` (ISO UTC; `edited_at` empty if never corrected, CR-01), `respondent_name, respondent_email` (identified surveys, decision D-03 revised as D-08), `visit_code` (only if the survey requires one), then one column per question in position order headed `Q<position> <question text>`.
 4. Cell values: rating number; single-choice label; multiple-choice labels joined with `; ` in option order; text as written; empty for an unanswered optional question.
 5. Survey without responses → header row only.
 

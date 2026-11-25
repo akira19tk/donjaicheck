@@ -1,6 +1,6 @@
 # Sprint 1 — Software Test Specification (STS)
 
-Version 1.1 (1.0 pre-implementation; 1.1 adds the test-file mapping). Levels: **U** = unit (pure function), **API** = API + database integration (Vitest + Supertest against `TEST_DATABASE_URL`, data reset per test file), **E2E** = Playwright through the browser, **M** = manual check.
+Version 1.2 (1.0 pre-implementation; 1.1 adds the test-file mapping; 1.2 adds CR-01 tests TEST-U-15, TEST-05-09…12 before implementation). Levels: **U** = unit (pure function), **API** = API + database integration (Vitest + Supertest against `TEST_DATABASE_URL`, data reset per test file), **E2E** = Playwright through the browser, **M** = manual check.
 
 Seed for API tests: owner A, owner B, respondent R1, respondent R2 (created by a test fixture, password from env).
 
@@ -37,6 +37,11 @@ Seed for API tests: owner A, owner B, respondent R1, respondent R2 (created by a
 | TEST-05-07 | AC-05-05 | API | PUBLISHED survey with 1 required + 1 optional question | Post without the required answer; post with only the required answer | 400 detail for the required question; second post 201 with 1 Answer |
 | TEST-U-02 | AC-05-05 | U | — | `validateResponse` table of valid/invalid cases (boundaries 1 and 5, 500/501 chars, duplicate answer) | expected errors exactly |
 | TEST-05-08 | AC-05-07 | API | R1 and R2 each responded | R1 GET own response; R1 GET R2's response | 200 with R1's answers; 404 without answers |
+| TEST-U-15 | AC-05-08…11 | U | now fixed | `canEditResponse` at 29:59 / 30:00, editCount 2 / 3, accepting true / false | allowed only at 29:59, count < 3, accepting (CR-01) |
+| TEST-05-09 | AC-05-08 | API | R1 responded 29 min 59 s ago (DB), 0 edits | R1 PUT new answers | 200; answers replaced; editCount 1; editedAt set; same id and submittedAt (CR-01) |
+| TEST-05-10 | AC-05-09, AC-05-10 | API | R1 response at exactly 30 min; another with editCount 2 | PUT; then two more PUTs on the second | 409 `EDIT_WINDOW_PASSED`; 200 then 409 `EDIT_LIMIT_REACHED`; answers unchanged after each 409 (CR-01) |
+| TEST-05-11 | AC-05-11 | API | Survey CLOSED; survey with closesAt passed; open survey | PUT valid answers; PUT rating 9 | 409 `SURVEY_NOT_OPEN` ×2; 400; stored answers and editCount unchanged (CR-01) |
+| TEST-05-12 | AC-05-12 | API | R1 responded | R2 PUT R1's response; owner PUT; owner GET summary after R1's edit | 404; 403; responseCount 1, average from the new rating (CR-01) |
 | TEST-06-01 | AC-06-01 | API | 3 responses (ratings 5,4,4; options X,X,Y; 2 texts) | Owner GET summary | responseCount 3; average 4.33; distribution {4:2,5:1}; X:2, Y:1, Z:0; 2 texts |
 | TEST-06-02 | AC-06-02 | API | Published survey without responses | Owner GET summary | responseCount 0; average null; all counts 0; texts [] |
 | TEST-06-03 | AC-06-03 | API | Owner A's survey | Owner B and R1 GET summary | 404 and 403; no aggregate fields in body |
