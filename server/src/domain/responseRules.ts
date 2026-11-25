@@ -11,6 +11,9 @@ export interface QuestionForValidation {
   type: QuestionTypeName;
   required: boolean;
   optionIds: number[];
+  /** F-09: MULTIPLE_CHOICE limits (BR-12) */
+  minSelections?: number | null;
+  maxSelections?: number | null;
 }
 
 export interface ValidAnswer {
@@ -18,6 +21,8 @@ export interface ValidAnswer {
   ratingValue?: number;
   optionId?: number;
   textValue?: string;
+  /** F-09: selected options of a MULTIPLE_CHOICE answer */
+  optionIds?: number[];
 }
 
 export type ResponseValidation = { ok: true; answers: ValidAnswer[] } | { ok: false; details: FieldError[] };
@@ -70,6 +75,22 @@ export function validateResponse(questions: QuestionForValidation[], rawAnswers:
       } else if (typeof v !== "number" || !q.optionIds.includes(v)) {
         details.push({ field: f, message: "Invalid option" });
       } else answers.push({ questionId: q.id, optionId: v });
+    } else if (q.type === "MULTIPLE_CHOICE") {
+      // F-09 (BR-03 extended, BR-12)
+      const v = a?.optionIds;
+      const min = q.minSelections ?? (q.required ? 1 : 0);
+      const max = q.maxSelections ?? q.optionIds.length;
+      if (v === undefined || v === null || (Array.isArray(v) && v.length === 0)) {
+        if (q.required || min > 0) details.push({ field: f, message: "Required" });
+      } else if (!Array.isArray(v) || !v.every((x) => Number.isInteger(x)) || new Set(v).size !== v.length) {
+        details.push({ field: f, message: "Invalid selection" });
+      } else if (!v.every((x: number) => q.optionIds.includes(x))) {
+        details.push({ field: f, message: "Invalid option" });
+      } else if (v.length < min) {
+        details.push({ field: f, message: `Select at least ${min}` });
+      } else if (v.length > max) {
+        details.push({ field: f, message: `Select at most ${max}` });
+      } else answers.push({ questionId: q.id, optionIds: v as number[] });
     } else {
       const v = a?.text;
       const text = typeof v === "string" ? v.trim() : v;
@@ -84,4 +105,33 @@ export function validateResponse(questions: QuestionForValidation[], rawAnswers:
   }
 
   return details.length ? { ok: false, details } : { ok: true, answers };
+}
+
+// CR-01 (Lab 7) ---------------------------------------------------------------
+
+export const EDIT_WINDOW_MINUTES = 30;
+export const MAX_EDITS = 3;
+
+export type EditCheck =
+  | { ok: true; editableUntil: Date }
+  | { ok: false; code: "SURVEY_NOT_OPEN" | "EDIT_WINDOW_PASSED" | "EDIT_LIMIT_REACHED"; message: string };
+
+/**
+ * BR-15: a respondent may replace their answers while the survey still accepts responses,
+ * less than 30 minutes after submission, and fewer than 3 times. Checked in that order.
+ */
+export function canEditResponse(
+  response: { submittedAt: Date; editCount: number },
+  surveyAccepting: boolean,
+  now: Date
+): EditCheck {
+  const editableUntil = new Date(response.submittedAt.getTime() + EDIT_WINDOW_MINUTES * 60_000);
+  if (!surveyAccepting) return { ok: false, code: "SURVEY_NOT_OPEN", message: "This survey no longer accepts changes" };
+  if (now.getTime() >= editableUntil.getTime()) {
+    return { ok: false, code: "EDIT_WINDOW_PASSED", message: `Answers can only be changed within ${EDIT_WINDOW_MINUTES} minutes` };
+  }
+  if (response.editCount >= MAX_EDITS) {
+    return { ok: false, code: "EDIT_LIMIT_REACHED", message: `Answers can be changed at most ${MAX_EDITS} times` };
+  }
+  return { ok: true, editableUntil };
 }

@@ -49,6 +49,7 @@ enum QuestionType {
   RATING
   SINGLE_CHOICE
   TEXT
+  MULTIPLE_CHOICE
 }
 
 model Survey {
@@ -62,11 +63,17 @@ model Survey {
   updatedAt   DateTime     @updatedAt
   publishedAt DateTime?
   closedAt    DateTime?
+  // F-08 (BR-11): optional scheduled closing time
+  closesAt    DateTime?
+  // F-07 (BR-09): answering requires an unused visit code of this survey
+  requiresVisitCode Boolean  @default(false)
   questions   Question[]
   responses   Response[]
+  visitCodes  VisitCode[]
 
   @@index([ownerId])
   @@index([status])
+  @@index([status, closesAt])
 }
 
 model Question {
@@ -77,6 +84,9 @@ model Question {
   text     String
   type     QuestionType
   required Boolean          @default(true)
+  // F-09 (BR-12): selection limits, used only by MULTIPLE_CHOICE questions
+  minSelections Int?
+  maxSelections Int?
   options  QuestionOption[]
   answers  Answer[]
 
@@ -90,6 +100,7 @@ model QuestionOption {
   position   Int
   label      String
   answers    Answer[]
+  selections AnswerOption[]
 
   @@unique([questionId, label])
 }
@@ -104,7 +115,11 @@ model Response {
   respondentId Int
   respondent   User     @relation(fields: [respondentId], references: [id])
   submittedAt  DateTime @default(now())
+  // CR-01 (BR-15): corrections within 30 minutes, at most 3
+  editedAt     DateTime?
+  editCount    Int      @default(0)
   answers      Answer[]
+  visitCode    VisitCode?
 
   @@unique([surveyId, respondentId])
   @@index([respondentId])
@@ -121,7 +136,37 @@ model Answer {
   optionId    Int?
   option      QuestionOption? @relation(fields: [optionId], references: [id])
   textValue   String?
+  selections  AnswerOption[]
 
   @@unique([responseId, questionId])
   @@index([questionId])
+}
+
+// F-07 ---------------------------------------------------------------------
+
+// BR-09: single-use code printed on a receipt. Consumed in the same transaction as the response.
+model VisitCode {
+  id         Int       @id @default(autoincrement())
+  surveyId   Int
+  survey     Survey    @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  code       String    @unique @db.VarChar(8)
+  createdAt  DateTime  @default(now())
+  usedAt     DateTime?
+  responseId Int?      @unique
+  response   Response? @relation(fields: [responseId], references: [id], onDelete: SetNull)
+
+  @@index([surveyId, usedAt])
+}
+
+// F-09 ---------------------------------------------------------------------
+
+// One selected option of a MULTIPLE_CHOICE answer.
+model AnswerOption {
+  answerId Int
+  answer   Answer         @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  optionId Int
+  option   QuestionOption @relation(fields: [optionId], references: [id])
+
+  @@id([answerId, optionId])
+  @@index([optionId])
 }

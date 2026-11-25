@@ -2,9 +2,9 @@
 
 | Item | Value |
 |---|---|
-| Requirements | FR-09, FR-10, FR-11, BR-01, BR-02, BR-03, BR-07 |
+| Requirements | FR-09, FR-10, FR-11, BR-01, BR-02, BR-03, BR-07, BR-15 (CR-01) |
 | Depends on | F-04 |
-| Version | 1.0 (pre-implementation) |
+| Version | 1.1 (CR-01 — correction of own response; 1.0 was the Sprint 1 contract) |
 
 ## Behaviour and workflow
 1. Respondent opens **Available surveys**: all PUBLISHED surveys, each marked "Answered" if the respondent already responded.
@@ -51,3 +51,19 @@ Available surveys list with empty state ("No surveys open right now"); answer fo
 
 ## Definition of Done (feature)
 Product DoD plus TEST-05-01…08, TEST-U-02 and TEST-E2E-02 pass (TDD: TEST-05-03 and TEST-U-02 committed failing first).
+
+## CR-01 — Correcting a submitted response (added in v1.1, before implementation)
+
+Change request and impact analysis: [../../maintenance/CR-01-edit-response.md](../../maintenance/CR-01-edit-response.md). Old rule (v1.0): responses are final (D-04).
+
+**Workflow.** On **My answers** (`/responses/:id`) the respondent sees **Edit my answers** with "until HH:MM · N edits left" while BR-15 allows it. The button opens `/responses/:id/edit`: the survey form pre-filled with the current answers (no visit-code field — the original code stays linked). **Save changes** sends `PUT /api/responses/:id`; on success the page returns to My answers with "Your answers were updated".
+
+**API.**
+| Method / path | Request | Success | Errors |
+|---|---|---|---|
+| PUT /api/responses/:id | `{ "answers": [...] }` (same format as submit) | 200 `{ "response": { id, submittedAt, editedAt, editCount } }` | 400 details; 401; 403 (owner); 404 (not own); 409 `SURVEY_NOT_OPEN`, `EDIT_WINDOW_PASSED`, `EDIT_LIMIT_REACHED` |
+| GET /api/responses/:id | — | + `editedAt`, `editCount`, `editableUntil` (ISO or null), `canEdit`; answers also carry `optionId` / `optionIds` for pre-filling | unchanged |
+
+**Data.** `Response.editedAt TIMESTAMP NULL`, `Response.editCount INT NOT NULL DEFAULT 0` (migration `response_edits`). Old answers are deleted and new ones inserted in one transaction.
+
+**Acceptance criteria.** AC-05-08 … AC-05-12 as listed in CR-01 §3.

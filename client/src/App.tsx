@@ -36,6 +36,7 @@ export function App() {
           <Route path="/surveys" element={<AvailableSurveysPage />} />
           <Route path="/surveys/:id" element={<AnswerSurveyPage />} />
           <Route path="/responses/:id" element={<ResponsePage />} />
+          <Route path="/responses/:responseId/edit" element={<AnswerSurveyPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Home />} />

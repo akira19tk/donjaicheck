@@ -4,6 +4,40 @@ import { apiFetch, ApiError } from "../../api";
 import { EmptyState, ErrorBanner, Loading, StatusBadge } from "../../components/ui";
 import type { QuestionType, SurveyStatus } from "../../types";
 
+/** F-10: downloads the CSV export through the session cookie and saves it with the server's file name. */
+export function DownloadCsvButton({ surveyId }: { surveyId: number }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const download = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/owner/surveys/${surveyId}/export.csv`, { credentials: "include" });
+      if (!res.ok) throw new Error(res.status === 404 ? "Survey not found." : "Download failed. Please try again.");
+      const blob = await res.blob();
+      const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? `survey-${surveyId}.csv`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Download failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <button className="btn" onClick={download} disabled={busy}>
+        {busy ? "Preparing…" : "Download CSV"}
+      </button>
+      {error && <span className="field-error">{error}</span>}
+    </>
+  );
+}
+
 interface QuestionSummary {
   questionId: number;
   position: number;
@@ -60,9 +94,12 @@ export function SummaryPage() {
             <StatusBadge status={summary.survey.status} />
           </div>
         </div>
-        <Link className="btn" to={`/owner/surveys/${summary.survey.id}`}>
-          Survey details
-        </Link>
+        <div className="actions">
+          <DownloadCsvButton surveyId={summary.survey.id} />
+          <Link className="btn" to={`/owner/surveys/${summary.survey.id}`}>
+            Survey details
+          </Link>
+        </div>
       </div>
       <div className="card" style={{ marginBottom: "1rem" }}>
         <div className="muted">Responses</div>
@@ -91,7 +128,9 @@ export function SummaryPage() {
               {q.type === "RATING" &&
                 q.distribution &&
                 ["5", "4", "3", "2", "1"].map((k) => <Bar key={k} label={`${k} ★`} count={q.distribution![k]} total={q.answered} />)}
-              {q.type === "SINGLE_CHOICE" && q.options?.map((o) => <Bar key={o.optionId} label={o.label} count={o.count} total={q.answered} />)}
+              {(q.type === "SINGLE_CHOICE" || q.type === "MULTIPLE_CHOICE") &&
+                q.options?.map((o) => <Bar key={o.optionId} label={o.label} count={o.count} total={q.answered} />)}
+              {q.type === "MULTIPLE_CHOICE" && <small className="muted">Respondents could pick several options, so percentages can add up to more than 100%.</small>}
               {q.type === "TEXT" &&
                 (q.texts && q.texts.length ? (
                   <ul className="texts">
