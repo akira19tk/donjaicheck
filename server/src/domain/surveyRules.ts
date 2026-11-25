@@ -23,6 +23,8 @@ export interface SurveyInput {
   title: string;
   description: string;
   questions: { text: string; type: QuestionTypeName; required: boolean; options: string[] }[];
+  /** F-07: undefined when the request does not send it (an edit then keeps the stored value). */
+  requiresVisitCode?: boolean;
 }
 
 export type ValidationResult = { ok: true; value: SurveyInput } | { ok: false; details: FieldError[] };
@@ -47,6 +49,12 @@ export function validateSurveyInput(body: unknown): ValidationResult {
       if (description.length > LIMITS.descriptionMax)
         details.push({ field: "description", message: `Description must be at most ${LIMITS.descriptionMax} characters` });
     }
+  }
+
+  let requiresVisitCode: boolean | undefined;
+  if (b.requiresVisitCode !== undefined) {
+    if (typeof b.requiresVisitCode !== "boolean") details.push({ field: "requiresVisitCode", message: "Must be true or false" });
+    else requiresVisitCode = b.requiresVisitCode;
   }
 
   const rawQuestions = b.questions === undefined ? [] : b.questions;
@@ -99,7 +107,7 @@ export function validateSurveyInput(body: unknown): ValidationResult {
     });
   }
 
-  return details.length ? { ok: false, details } : { ok: true, value: { title, description, questions } };
+  return details.length ? { ok: false, details } : { ok: true, value: { title, description, questions, requiresVisitCode } };
 }
 
 /** BR-04: DRAFT -> PUBLISHED (publish) and PUBLISHED -> CLOSED (close) are the only transitions. */

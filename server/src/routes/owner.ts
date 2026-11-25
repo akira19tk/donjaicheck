@@ -7,6 +7,7 @@ import { AppError, notFound, validationFailed } from "../lib/errors";
 import { canTransition, validateSurveyInput, type LifecycleAction, type SurveyInput } from "../domain/surveyRules";
 import { buildSummary } from "../domain/summary";
 import { validateClosesAt } from "../domain/closing";
+import { generateVisitCode, validateCodeCount } from "../domain/visitCodes";
 import { closeExpired } from "../lib/closeExpired";
 
 export const ownerRouter = Router();
@@ -38,7 +39,7 @@ export async function responseCounts(surveyIds: number[]): Promise<Map<number, n
   return new Map(rows.map((r) => [r.surveyId, r._count._all]));
 }
 
-export function toSurveyDetail(s: SurveyWithQuestions, responseCount: number) {
+export function toSurveyDetail(s: SurveyWithQuestions, responseCount: number, codes = { total: 0, used: 0 }) {
   return {
     id: s.id,
     title: s.title,
@@ -48,6 +49,9 @@ export function toSurveyDetail(s: SurveyWithQuestions, responseCount: number) {
     publishedAt: s.publishedAt,
     closedAt: s.closedAt,
     closesAt: s.closesAt,
+    requiresVisitCode: s.requiresVisitCode,
+    visitCodeCount: codes.total,
+    usedVisitCodeCount: codes.used,
     responseCount,
     questions: s.questions.map((q) => ({
       id: q.id,
@@ -69,8 +73,12 @@ export async function loadOwnSurvey(id: number, ownerId: number) {
 
 async function detailResponse(id: number) {
   const survey = await prisma.survey.findUniqueOrThrow({ where: { id }, include: surveyInclude });
-  const counts = await responseCounts([id]);
-  return { survey: toSurveyDetail(survey, counts.get(id) ?? 0) };
+  const [counts, total, used] = await Promise.all([
+    responseCounts([id]),
+    prisma.visitCode.count({ where: { surveyId: id } }),
+    prisma.visitCode.count({ where: { surveyId: id, usedAt: { not: null } } }),
+  ]);
+  return { survey: toSurveyDetail(survey, counts.get(id) ?? 0, { total, used }) };
 }
 
 const questionCreate = (questions: SurveyInput["questions"]) =>
@@ -116,9 +124,16 @@ function validateBody(body: unknown) {
 }
 
 ownerRouter.post("/surveys", async (req, res) => {
-  const { title, description, questions, closesAt } = validateBody(req.body);
+  const { title, description, questions, closesAt, requiresVisitCode } = validateBody(req.body);
   const created = await prisma.survey.create({
-    data: { ownerId: req.user!.id, title, description, closesAt, questions: { create: questionCreate(questions) } },
+    data: {
+      ownerId: req.user!.id,
+      title,
+      description,
+      closesAt,
+      requiresVisitCode: requiresVisitCode ?? false,
+      questions: { create: questionCreate(questions) },
+    },
   });
   res.status(201).json(await detailResponse(created.id));
 });
@@ -134,13 +149,13 @@ ownerRouter.put("/surveys/:id", async (req, res) => {
   if (survey.status !== "DRAFT") {
     throw new AppError(409, "SURVEY_NOT_EDITABLE", "Only draft surveys can be edited");
   }
-  const { title, description, questions, closesAt } = validateBody(req.body);
+  const { title, description, questions, closesAt, requiresVisitCode } = validateBody(req.body);
 
   await prisma.$transaction(async (tx) => {
     // Re-check the status inside the transaction so a concurrent publish wins safely.
     const updated = await tx.survey.updateMany({
       where: { id: survey.id, ownerId: req.user!.id, status: "DRAFT" },
-      data: { title, description, closesAt },
+      data: { title, description, closesAt, requiresVisitCode },
     });
     if (updated.count === 0) throw new AppError(409, "SURVEY_NOT_EDITABLE", "Only draft surveys can be edited");
     await tx.question.deleteMany({ where: { surveyId: survey.id } });
@@ -195,6 +210,40 @@ ownerRouter.put("/surveys/:id/closing", async (req, res) => {
   });
   if (updated.count === 0) throw new AppError(409, "SURVEY_CLOSED", "A closed survey cannot be scheduled");
   res.json(await detailResponse(survey.id));
+});
+
+// FR-13 / F-07: generate single-use visit codes for an own restricted survey (BR-09)
+ownerRouter.post("/surveys/:id/visit-codes", async (req, res) => {
+  const survey = await loadOwnSurvey(parseId(req.params.id), req.user!.id);
+  const count = validateCodeCount(req.body?.count);
+  if (!count.ok) throw validationFailed(count.details);
+  if (!survey.requiresVisitCode) {
+    throw new AppError(409, "VISIT_CODES_NOT_ENABLED", "Turn on 'Require a visit code' for this survey first");
+  }
+  if (survey.status === "CLOSED") throw new AppError(409, "SURVEY_CLOSED", "A closed survey does not need new codes");
+
+  const created: { code: string; createdAt: Date }[] = [];
+  // Codes are unique system-wide; on the (very unlikely) collision a new code is drawn.
+  for (let attempts = 0; created.length < count.value && attempts < count.value * 5; attempts++) {
+    try {
+      created.push(
+        await prisma.visitCode.create({ data: { surveyId: survey.id, code: generateVisitCode() }, select: { code: true, createdAt: true } })
+      );
+    } catch (e) {
+      if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e;
+    }
+  }
+  res.status(201).json({ codes: created });
+});
+
+ownerRouter.get("/surveys/:id/visit-codes", async (req, res) => {
+  const survey = await loadOwnSurvey(parseId(req.params.id), req.user!.id);
+  const codes = await prisma.visitCode.findMany({
+    where: { surveyId: survey.id },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: { code: true, createdAt: true, usedAt: true },
+  });
+  res.json({ codes });
 });
 
 // FR-12 / F-06: aggregate summary of an own survey (BR-06)

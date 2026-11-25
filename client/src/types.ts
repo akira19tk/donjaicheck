@@ -25,6 +25,9 @@ export interface SurveyDetail {
   publishedAt: string | null;
   closedAt: string | null;
   closesAt: string | null;
+  requiresVisitCode: boolean;
+  visitCodeCount: number;
+  usedVisitCodeCount: number;
   responseCount: number;
   questions: Question[];
 }
@@ -59,3 +62,12 @@ export const toLocalInput = (iso: string | null) => {
 
 /** <input type="datetime-local"> value (local time) -> ISO string, or null when empty. */
 export const fromLocalInput = (value: string) => (value ? new Date(value).toISOString() : null);
+
+export interface VisitCodeItem {
+  code: string;
+  createdAt: string;
+  usedAt: string | null;
+}
+
+/** Shows a stored code as "AB3K-9QXZ" (easier to read on a receipt). */
+export const formatVisitCode = (code: string) => `${code.slice(0, 4)}-${code.slice(4)}`;
