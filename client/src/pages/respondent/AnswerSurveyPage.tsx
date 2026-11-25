@@ -25,9 +25,20 @@ export const selectionHint = (q: Question) => {
   return min > 0 ? `Choose ${min}–${max}` : `Choose up to ${max}`;
 };
 
-/** FR-10: answer a published survey (BR-01..BR-03 enforced by the API). */
+interface OwnResponse {
+  id: number;
+  survey: { id: number };
+  canEdit: boolean;
+  answers: { questionId: number; rating: number | null; optionId: number | null; optionIds?: number[]; text: string | null }[];
+}
+
+/**
+ * FR-10: answer a published survey (BR-01..BR-03 enforced by the API).
+ * CR-01: at /responses/:responseId/edit the same form corrects my own response (BR-15).
+ */
 export function AnswerSurveyPage() {
-  const { id } = useParams();
+  const { id: routeSurveyId, responseId: editId } = useParams();
+  const editing = Boolean(editId);
   const navigate = useNavigate();
   const [survey, setSurvey] = useState<RespondentSurvey | null>(null);
   const [responseId, setResponseId] = useState<number | null>(null);
@@ -38,13 +49,34 @@ export function AnswerSurveyPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    apiFetch<{ survey: RespondentSurvey; responseId: number | null }>(`/api/surveys/${id}`)
-      .then((r) => {
-        setSurvey(r.survey);
-        setResponseId(r.responseId);
-      })
-      .catch((e: Error) => setError(e instanceof ApiError && e.status === 404 ? "This survey is not available." : e.message));
-  }, [id]);
+    const load = async () => {
+      let surveyId = routeSurveyId;
+      if (editId) {
+        // CR-01: pre-fill the form with my current answers.
+        const { response } = await apiFetch<{ response: OwnResponse }>(`/api/responses/${editId}`);
+        if (!response.canEdit) throw new Error("These answers can no longer be changed.");
+        surveyId = String(response.survey.id);
+        setAnswers(
+          Object.fromEntries(
+            response.answers.map((a) => [
+              a.questionId,
+              a.rating !== null
+                ? { rating: a.rating }
+                : a.optionIds && a.optionIds.length
+                  ? { optionIds: a.optionIds }
+                  : a.optionId !== null
+                    ? { optionId: a.optionId }
+                    : { text: a.text ?? "" },
+            ])
+          )
+        );
+      }
+      const r = await apiFetch<{ survey: RespondentSurvey; responseId: number | null }>(`/api/surveys/${surveyId}`);
+      setSurvey(r.survey);
+      if (!editId) setResponseId(r.responseId);
+    };
+    load().catch((e: Error) => setError(e instanceof ApiError && e.status === 404 ? "This survey is not available." : e.message));
+  }, [routeSurveyId, editId]);
 
   const set = (qid: number, value: AnswerValue) => setAnswers((a) => ({ ...a, [qid]: value }));
 
@@ -58,9 +90,14 @@ export function AnswerSurveyPage() {
       answers: survey.questions
         .filter((q) => answers[q.id] !== undefined && !(answers[q.id].optionIds && answers[q.id].optionIds!.length === 0))
         .map((q) => ({ questionId: q.id, ...answers[q.id] })),
-      ...(survey.requiresVisitCode ? { visitCode } : {}),
+      ...(survey.requiresVisitCode && !editing ? { visitCode } : {}),
     };
     try {
+      if (editing) {
+        await apiFetch(`/api/responses/${editId}`, { method: "PUT", body: { answers: body.answers } });
+        navigate(`/responses/${editId}`, { state: { justEdited: true } });
+        return;
+      }
       const r = await apiFetch<{ response: { id: number } }>(`/api/surveys/${survey.id}/responses`, { method: "POST", body });
       navigate(`/responses/${r.response.id}`, { state: { justSubmitted: true } });
     } catch (err) {
@@ -90,7 +127,8 @@ export function AnswerSurveyPage() {
         <form className="card" onSubmit={onSubmit} noValidate>
           <p className="identified-note">This is an identified survey: your answers are linked to your account.</p>
           {survey.closesAt && <p className="meta">Open until {formatDate(survey.closesAt)}</p>}
-          {survey.requiresVisitCode && (
+          {editing && <p className="meta">You are changing answers you already sent.</p>}
+          {survey.requiresVisitCode && !editing && (
             <label className={`field ${fieldErrors.visitCode ? "has-error" : ""}`}>
               <span>Visit code (printed on your receipt) *</span>
               <input value={visitCode} onChange={(e) => setVisitCode(e.target.value)} placeholder="AB3K-9QXZ" maxLength={12} autoComplete="off" />
@@ -175,7 +213,7 @@ export function AnswerSurveyPage() {
           })}
           <div className="actions">
             <button className="btn btn-primary" type="submit" disabled={submitting}>
-              {submitting ? "Submitting…" : "Submit answers"}
+              {submitting ? "Saving…" : editing ? "Save changes" : "Submit answers"}
             </button>
             <Link className="btn btn-ghost" to="/surveys">
               Cancel

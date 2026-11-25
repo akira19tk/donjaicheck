@@ -7,6 +7,11 @@ import { formatDate, type QuestionType } from "../../types";
 interface MyResponse {
   id: number;
   submittedAt: string;
+  editedAt?: string | null;
+  editCount?: number;
+  maxEdits?: number;
+  canEdit?: boolean;
+  editableUntil?: string | null;
   survey: { id: number; title: string };
   answers: { questionId: number; questionText: string; type: QuestionType; rating: number | null; optionLabel: string | null; optionLabels?: string[]; text: string | null }[];
 }
@@ -15,7 +20,9 @@ interface MyResponse {
 export function ResponsePage() {
   const { id } = useParams();
   const location = useLocation();
-  const justSubmitted = Boolean((location.state as { justSubmitted?: boolean } | null)?.justSubmitted);
+  const state = location.state as { justSubmitted?: boolean; justEdited?: boolean } | null;
+  const justSubmitted = Boolean(state?.justSubmitted);
+  const justEdited = Boolean(state?.justEdited);
   const [response, setResponse] = useState<MyResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +38,21 @@ export function ResponsePage() {
     <section>
       {justSubmitted && <SuccessBanner>Thank you! Your answers were submitted at {formatDate(response.submittedAt)}.</SuccessBanner>}
       <h1>{response.survey.title}</h1>
-      <p className="meta">Submitted {formatDate(response.submittedAt)}</p>
+      {justEdited && <SuccessBanner>Your answers were updated.</SuccessBanner>}
+      <p className="meta">
+        Submitted {formatDate(response.submittedAt)}
+        {response.editedAt && <> · changed {formatDate(response.editedAt)}</>}
+      </p>
+      {response.canEdit && response.editableUntil && (
+        <p className="actions">
+          <Link className="btn btn-small" to={`/responses/${response.id}/edit`}>
+            Edit my answers
+          </Link>
+          <span className="meta">
+            until {formatDate(response.editableUntil)} · {(response.maxEdits ?? 3) - (response.editCount ?? 0)} edits left
+          </span>
+        </p>
+      )}
       <div className="card">
         <h2 style={{ marginTop: 0 }}>My answers</h2>
         <dl>

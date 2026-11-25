@@ -106,3 +106,32 @@ export function validateResponse(questions: QuestionForValidation[], rawAnswers:
 
   return details.length ? { ok: false, details } : { ok: true, answers };
 }
+
+// CR-01 (Lab 7) ---------------------------------------------------------------
+
+export const EDIT_WINDOW_MINUTES = 30;
+export const MAX_EDITS = 3;
+
+export type EditCheck =
+  | { ok: true; editableUntil: Date }
+  | { ok: false; code: "SURVEY_NOT_OPEN" | "EDIT_WINDOW_PASSED" | "EDIT_LIMIT_REACHED"; message: string };
+
+/**
+ * BR-15: a respondent may replace their answers while the survey still accepts responses,
+ * less than 30 minutes after submission, and fewer than 3 times. Checked in that order.
+ */
+export function canEditResponse(
+  response: { submittedAt: Date; editCount: number },
+  surveyAccepting: boolean,
+  now: Date
+): EditCheck {
+  const editableUntil = new Date(response.submittedAt.getTime() + EDIT_WINDOW_MINUTES * 60_000);
+  if (!surveyAccepting) return { ok: false, code: "SURVEY_NOT_OPEN", message: "This survey no longer accepts changes" };
+  if (now.getTime() >= editableUntil.getTime()) {
+    return { ok: false, code: "EDIT_WINDOW_PASSED", message: `Answers can only be changed within ${EDIT_WINDOW_MINUTES} minutes` };
+  }
+  if (response.editCount >= MAX_EDITS) {
+    return { ok: false, code: "EDIT_LIMIT_REACHED", message: `Answers can be changed at most ${MAX_EDITS} times` };
+  }
+  return { ok: true, editableUntil };
+}
