@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../../api";
 import { ErrorBanner, Loading } from "../../components/ui";
-import { TYPE_LABEL, type QuestionType, type SurveyDetail } from "../../types";
+import { isChoiceType, TYPE_LABEL, type QuestionType, type SurveyDetail } from "../../types";
 
 interface DraftQuestion {
   key: number;
@@ -10,6 +10,9 @@ interface DraftQuestion {
   type: QuestionType;
   required: boolean;
   options: string[];
+  /** F-09: text of the min/max inputs ("" = use the default) */
+  minSelections: string;
+  maxSelections: string;
 }
 
 let nextKey = 1;
@@ -18,8 +21,13 @@ const blankQuestion = (type: QuestionType = "RATING"): DraftQuestion => ({
   text: "",
   type,
   required: true,
-  options: type === "SINGLE_CHOICE" ? ["", ""] : [],
+  options: isChoiceType(type) ? ["", ""] : [],
+  minSelections: "",
+  maxSelections: "",
 });
+
+/** "" -> undefined (server applies the BR-12 default); otherwise the number typed. */
+const limit = (v: string) => (v.trim() === "" ? undefined : Number(v));
 
 /** F-03: create a new draft (/owner/surveys/new) or edit an own draft (/owner/surveys/:id/edit). */
 export function SurveyEditorPage() {
@@ -55,6 +63,8 @@ export function SurveyEditorPage() {
             type: q.type,
             required: q.required,
             options: q.options.map((o) => o.label),
+            minSelections: q.minSelections != null ? String(q.minSelections) : "",
+            maxSelections: q.maxSelections != null ? String(q.maxSelections) : "",
           }))
         );
       })
@@ -66,7 +76,13 @@ export function SurveyEditorPage() {
     setQuestions((qs) => qs.map((q) => (q.key === key ? { ...q, ...patch } : q)));
 
   const changeType = (key: number, type: QuestionType) =>
-    update(key, { type, options: type === "SINGLE_CHOICE" ? ["", ""] : [] });
+    setQuestions((qs) =>
+      qs.map((q) =>
+        q.key === key
+          ? { ...q, type, options: isChoiceType(type) ? (isChoiceType(q.type) ? q.options : ["", ""]) : [], minSelections: "", maxSelections: "" }
+          : q
+      )
+    );
 
   const move = (index: number, delta: number) =>
     setQuestions((qs) => {
@@ -86,7 +102,11 @@ export function SurveyEditorPage() {
       title,
       description,
       requiresVisitCode,
-      questions: questions.map(({ text, type, required, options }) => ({ text, type, required, options })),
+      questions: questions.map(({ text, type, required, options, minSelections, maxSelections }) =>
+        type === "MULTIPLE_CHOICE"
+          ? { text, type, required, options, minSelections: limit(minSelections), maxSelections: limit(maxSelections) }
+          : { text, type, required, options }
+      ),
     };
     try {
       const { survey } = await apiFetch<{ survey: SurveyDetail }>(editing ? `/api/owner/surveys/${id}` : "/api/owner/surveys", {
@@ -163,7 +183,7 @@ export function SurveyEditorPage() {
                   </select>
                 </label>
               </div>
-              {q.type === "SINGLE_CHOICE" && (
+              {isChoiceType(q.type) && (
                 <div>
                   {q.options.map((opt, j) => (
                     <div className="option-row" key={j}>
@@ -184,6 +204,34 @@ export function SurveyEditorPage() {
                     </div>
                   ))}
                   {fe("options") && <small className="field-error">{fe("options")}</small>}
+                  {q.type === "MULTIPLE_CHOICE" && (
+                    <div className="option-row">
+                      <label className={`field ${fe("minSelections") ? "has-error" : ""}`}>
+                        <span>Min selections</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={10}
+                          placeholder={q.required ? "1" : "0"}
+                          value={q.minSelections}
+                          onChange={(e) => update(q.key, { minSelections: e.target.value })}
+                        />
+                        {fe("minSelections") && <small className="field-error">{fe("minSelections")}</small>}
+                      </label>
+                      <label className={`field ${fe("maxSelections") ? "has-error" : ""}`}>
+                        <span>Max selections</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={10}
+                          placeholder={String(q.options.length)}
+                          value={q.maxSelections}
+                          onChange={(e) => update(q.key, { maxSelections: e.target.value })}
+                        />
+                        {fe("maxSelections") && <small className="field-error">{fe("maxSelections")}</small>}
+                      </label>
+                    </div>
+                  )}
                   <div>
                     <button
                       type="button"

@@ -8,7 +8,7 @@ interface MyResponse {
   id: number;
   submittedAt: string;
   survey: { id: number; title: string };
-  answers: { questionId: number; questionText: string; type: QuestionType; rating: number | null; optionLabel: string | null; text: string | null }[];
+  answers: { questionId: number; questionText: string; type: QuestionType; rating: number | null; optionLabel: string | null; optionLabels?: string[]; text: string | null }[];
 }
 
 /** FR-10 confirmation + FR-11 own response (BR-07). */
@@ -40,7 +40,7 @@ export function ResponsePage() {
               <dt>
                 <strong>{a.questionText}</strong>
               </dt>
-              <dd style={{ margin: 0 }}>{a.rating !== null ? `${a.rating} / 5` : a.optionLabel ?? a.text}</dd>
+              <dd style={{ margin: 0 }}>{a.rating !== null ? `${a.rating} / 5` : a.optionLabels && a.optionLabels.length ? a.optionLabels.join(", ") : a.optionLabel ?? a.text}</dd>
             </div>
           ))}
         </dl>

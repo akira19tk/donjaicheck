@@ -14,7 +14,8 @@ export const LIMITS = {
   optionLabelMax: 60,
 } as const;
 
-export const QUESTION_TYPES = ["RATING", "SINGLE_CHOICE", "TEXT"] as const;
+export const QUESTION_TYPES = ["RATING", "SINGLE_CHOICE", "TEXT", "MULTIPLE_CHOICE"] as const;
+const CHOICE_TYPES: readonly string[] = ["SINGLE_CHOICE", "MULTIPLE_CHOICE"];
 export type QuestionTypeName = (typeof QUESTION_TYPES)[number];
 export type SurveyStatusName = "DRAFT" | "PUBLISHED" | "CLOSED";
 export type LifecycleAction = "publish" | "close";
@@ -22,7 +23,15 @@ export type LifecycleAction = "publish" | "close";
 export interface SurveyInput {
   title: string;
   description: string;
-  questions: { text: string; type: QuestionTypeName; required: boolean; options: string[] }[];
+  questions: {
+    text: string;
+    type: QuestionTypeName;
+    required: boolean;
+    options: string[];
+    /** F-09: set (with defaults applied) only for MULTIPLE_CHOICE questions. */
+    minSelections?: number;
+    maxSelections?: number;
+  }[];
   /** F-07: undefined when the request does not send it (an edit then keeps the stored value). */
   requiresVisitCode?: boolean;
 }
@@ -75,7 +84,7 @@ export function validateSurveyInput(body: unknown): ValidationResult {
 
       const type = q.type as QuestionTypeName;
       if (!QUESTION_TYPES.includes(type)) {
-        details.push({ field: f("type"), message: "Type must be RATING, SINGLE_CHOICE or TEXT" });
+        details.push({ field: f("type"), message: "Type must be RATING, SINGLE_CHOICE, MULTIPLE_CHOICE or TEXT" });
       }
 
       if (q.required !== undefined && typeof q.required !== "boolean") {
@@ -88,9 +97,9 @@ export function validateSurveyInput(body: unknown): ValidationResult {
         details.push({ field: f("options"), message: "Options must be a list of text" });
       } else {
         options = rawOptions.map((o) => o.trim());
-        if (type === "SINGLE_CHOICE") {
+        if (CHOICE_TYPES.includes(type)) {
           if (options.length < LIMITS.optionsMin || options.length > LIMITS.optionsMax) {
-            details.push({ field: f("options"), message: `Single choice needs ${LIMITS.optionsMin}-${LIMITS.optionsMax} options` });
+            details.push({ field: f("options"), message: `A choice question needs ${LIMITS.optionsMin}-${LIMITS.optionsMax} options` });
           } else if (options.some((o) => !o)) {
             details.push({ field: f("options"), message: "Options cannot be empty" });
           } else if (options.some((o) => o.length > LIMITS.optionLabelMax)) {
@@ -99,11 +108,39 @@ export function validateSurveyInput(body: unknown): ValidationResult {
             details.push({ field: f("options"), message: "Options must be unique" });
           }
         } else if (QUESTION_TYPES.includes(type) && options.length > 0) {
-          details.push({ field: f("options"), message: "Only single choice questions have options" });
+          details.push({ field: f("options"), message: "Only choice questions have options" });
         }
       }
 
-      questions.push({ text, type, required: q.required === undefined ? true : q.required === true, options });
+      const required = q.required === undefined ? true : q.required === true;
+      const question: SurveyInput["questions"][number] = { text, type, required, options };
+      if (type === "MULTIPLE_CHOICE") {
+        // BR-12: limits with defaults (min 1 if required else 0, max = number of options).
+        const n = options.length;
+        const isInt = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v);
+        const min = q.minSelections === undefined || q.minSelections === null ? (required ? 1 : 0) : q.minSelections;
+        const max = q.maxSelections === undefined || q.maxSelections === null ? n : q.maxSelections;
+        let ok = true;
+        if (!isInt(max) || max < 1 || max > n) {
+          details.push({ field: f("maxSelections"), message: `Maximum selections must be from 1 to ${n}` });
+          ok = false;
+        }
+        if (!isInt(min) || min < 0 || min > n) {
+          details.push({ field: f("minSelections"), message: `Minimum selections must be from 0 to ${n}` });
+          ok = false;
+        } else if (required && min < 1) {
+          details.push({ field: f("minSelections"), message: "A required question needs at least 1 selection" });
+          ok = false;
+        } else if (ok && min > (max as number)) {
+          details.push({ field: f("minSelections"), message: "Minimum cannot be more than maximum" });
+          ok = false;
+        }
+        if (ok) {
+          question.minSelections = min as number;
+          question.maxSelections = max as number;
+        }
+      }
+      questions.push(question);
     });
   }
 

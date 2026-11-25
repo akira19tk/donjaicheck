@@ -64,6 +64,8 @@ respondentRouter.get("/surveys/:id", requireAuth, respondentRole, closeExpired, 
         text: q.text,
         type: q.type,
         required: q.required,
+        minSelections: q.minSelections,
+        maxSelections: q.maxSelections,
         options: q.options.map((o) => ({ id: o.id, position: o.position, label: o.label })),
       })),
     },
@@ -87,7 +89,14 @@ respondentRouter.post("/surveys/:id/responses", requireAuth, respondentRole, clo
   if (existing) throw alreadyResponded(); // BR-01
 
   const result = validateResponse(
-    survey.questions.map((q) => ({ id: q.id, type: q.type, required: q.required, optionIds: q.options.map((o) => o.id) })),
+    survey.questions.map((q) => ({
+      id: q.id,
+      type: q.type,
+      required: q.required,
+      optionIds: q.options.map((o) => o.id),
+      minSelections: q.minSelections,
+      maxSelections: q.maxSelections,
+    })),
     req.body?.answers
   ); // BR-03
   // F-07 (BR-09): a restricted survey needs a visit code; report it together with any answer problems.
@@ -118,7 +127,16 @@ respondentRouter.post("/surveys/:id/responses", requireAuth, respondentRole, clo
       });
       if (!open) throw new AppError(409, "SURVEY_NOT_OPEN", "This survey is closed and no longer accepts responses");
       const response = await tx.response.create({
-        data: { surveyId, respondentId, answers: { create: result.answers } },
+        data: {
+          surveyId,
+          respondentId,
+          answers: {
+            // F-09: a multiple-choice answer is one Answer row plus one AnswerOption row per selected option.
+            create: result.answers.map(({ optionIds, ...a }) =>
+              optionIds ? { ...a, selections: { create: optionIds.map((optionId) => ({ optionId })) } } : a
+            ),
+          },
+        },
       });
       if (visitCode) {
         // Consume the code in the same transaction; if someone else used it a moment ago, roll everything back.
@@ -144,7 +162,10 @@ respondentRouter.get("/responses/:id", requireAuth, respondentRole, async (req, 
     where: { id: parseId(req.params.id), respondentId: req.user!.id },
     include: {
       survey: { select: { id: true, title: true } },
-      answers: { include: { question: true, option: true }, orderBy: { question: { position: "asc" } } },
+      answers: {
+        include: { question: true, option: true, selections: { include: { option: true } } },
+        orderBy: { question: { position: "asc" } },
+      },
     },
   });
   if (!response) throw notFound();
@@ -159,6 +180,10 @@ respondentRouter.get("/responses/:id", requireAuth, respondentRole, async (req, 
         type: a.question.type,
         rating: a.ratingValue,
         optionLabel: a.option?.label ?? null,
+        optionLabels: a.selections
+          .map((x) => x.option)
+          .sort((x, y) => x.position - y.position)
+          .map((o) => o.label),
         text: a.textValue,
       })),
     },

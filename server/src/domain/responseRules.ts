@@ -11,6 +11,9 @@ export interface QuestionForValidation {
   type: QuestionTypeName;
   required: boolean;
   optionIds: number[];
+  /** F-09: MULTIPLE_CHOICE limits (BR-12) */
+  minSelections?: number | null;
+  maxSelections?: number | null;
 }
 
 export interface ValidAnswer {
@@ -18,6 +21,8 @@ export interface ValidAnswer {
   ratingValue?: number;
   optionId?: number;
   textValue?: string;
+  /** F-09: selected options of a MULTIPLE_CHOICE answer */
+  optionIds?: number[];
 }
 
 export type ResponseValidation = { ok: true; answers: ValidAnswer[] } | { ok: false; details: FieldError[] };
@@ -70,6 +75,22 @@ export function validateResponse(questions: QuestionForValidation[], rawAnswers:
       } else if (typeof v !== "number" || !q.optionIds.includes(v)) {
         details.push({ field: f, message: "Invalid option" });
       } else answers.push({ questionId: q.id, optionId: v });
+    } else if (q.type === "MULTIPLE_CHOICE") {
+      // F-09 (BR-03 extended, BR-12)
+      const v = a?.optionIds;
+      const min = q.minSelections ?? (q.required ? 1 : 0);
+      const max = q.maxSelections ?? q.optionIds.length;
+      if (v === undefined || v === null || (Array.isArray(v) && v.length === 0)) {
+        if (q.required || min > 0) details.push({ field: f, message: "Required" });
+      } else if (!Array.isArray(v) || !v.every((x) => Number.isInteger(x)) || new Set(v).size !== v.length) {
+        details.push({ field: f, message: "Invalid selection" });
+      } else if (!v.every((x: number) => q.optionIds.includes(x))) {
+        details.push({ field: f, message: "Invalid option" });
+      } else if (v.length < min) {
+        details.push({ field: f, message: `Select at least ${min}` });
+      } else if (v.length > max) {
+        details.push({ field: f, message: `Select at most ${max}` });
+      } else answers.push({ questionId: q.id, optionIds: v as number[] });
     } else {
       const v = a?.text;
       const text = typeof v === "string" ? v.trim() : v;

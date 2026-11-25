@@ -91,7 +91,9 @@ export function SummaryPage() {
               {q.type === "RATING" &&
                 q.distribution &&
                 ["5", "4", "3", "2", "1"].map((k) => <Bar key={k} label={`${k} ★`} count={q.distribution![k]} total={q.answered} />)}
-              {q.type === "SINGLE_CHOICE" && q.options?.map((o) => <Bar key={o.optionId} label={o.label} count={o.count} total={q.answered} />)}
+              {(q.type === "SINGLE_CHOICE" || q.type === "MULTIPLE_CHOICE") &&
+                q.options?.map((o) => <Bar key={o.optionId} label={o.label} count={o.count} total={q.answered} />)}
+              {q.type === "MULTIPLE_CHOICE" && <small className="muted">Respondents could pick several options, so percentages can add up to more than 100%.</small>}
               {q.type === "TEXT" &&
                 (q.texts && q.texts.length ? (
                   <ul className="texts">

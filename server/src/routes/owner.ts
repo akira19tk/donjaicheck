@@ -59,6 +59,8 @@ export function toSurveyDetail(s: SurveyWithQuestions, responseCount: number, co
       text: q.text,
       type: q.type,
       required: q.required,
+      minSelections: q.minSelections,
+      maxSelections: q.maxSelections,
       options: q.options.map((o) => ({ id: o.id, position: o.position, label: o.label })),
     })),
   };
@@ -87,6 +89,8 @@ const questionCreate = (questions: SurveyInput["questions"]) =>
     text: q.text,
     type: q.type,
     required: q.required,
+    minSelections: q.minSelections ?? null,
+    maxSelections: q.maxSelections ?? null,
     options: { create: q.options.map((label, j) => ({ position: j + 1, label })) },
   }));
 
@@ -253,7 +257,14 @@ ownerRouter.get("/surveys/:id/summary", async (req, res) => {
     prisma.response.count({ where: { surveyId: survey.id } }),
     prisma.answer.findMany({
       where: { response: { surveyId: survey.id } },
-      select: { questionId: true, ratingValue: true, optionId: true, textValue: true, response: { select: { submittedAt: true } } },
+      select: {
+        questionId: true,
+        ratingValue: true,
+        optionId: true,
+        textValue: true,
+        selections: { select: { optionId: true } },
+        response: { select: { submittedAt: true } },
+      },
     }),
   ]);
   res.json({
@@ -267,7 +278,7 @@ ownerRouter.get("/surveys/:id/summary", async (req, res) => {
         type: q.type,
         options: q.options.map((o) => ({ id: o.id, label: o.label })),
       })),
-      answers.map((a) => ({ ...a, submittedAt: a.response.submittedAt }))
+      answers.map((a) => ({ ...a, optionIds: a.selections.map((x) => x.optionId), submittedAt: a.response.submittedAt }))
     ),
   });
 });
