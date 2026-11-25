@@ -9,6 +9,7 @@ import { buildSummary } from "../domain/summary";
 import { validateClosesAt } from "../domain/closing";
 import { generateVisitCode, validateCodeCount } from "../domain/visitCodes";
 import { buildCsv } from "../domain/csvExport";
+import { buildDuplicateInput } from "../domain/duplicate";
 import { closeExpired } from "../lib/closeExpired";
 
 export const ownerRouter = Router();
@@ -249,6 +250,32 @@ ownerRouter.get("/surveys/:id/visit-codes", async (req, res) => {
     select: { code: true, createdAt: true, usedAt: true },
   });
   res.json({ codes });
+});
+
+// FR-19 / F-13: duplicate an own survey (any status) into a new DRAFT (BR-14, D-05)
+ownerRouter.post("/surveys/:id/duplicate", async (req, res) => {
+  const source = await loadOwnSurvey(parseId(req.params.id), req.user!.id);
+  const copy = buildDuplicateInput(source);
+  const created = await prisma.survey.create({
+    data: {
+      ownerId: req.user!.id,
+      title: copy.title,
+      description: copy.description,
+      requiresVisitCode: copy.requiresVisitCode,
+      questions: {
+        create: copy.questions.map((q, i) => ({
+          position: i + 1,
+          text: q.text,
+          type: q.type,
+          required: q.required,
+          minSelections: q.minSelections,
+          maxSelections: q.maxSelections,
+          options: { create: q.options.map((label, j) => ({ position: j + 1, label })) },
+        })),
+      },
+    },
+  });
+  res.status(201).json(await detailResponse(created.id));
 });
 
 // FR-16 / F-10: CSV export of an own survey's responses (BR-06, BR-13)
