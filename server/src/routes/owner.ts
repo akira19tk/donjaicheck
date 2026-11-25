@@ -8,6 +8,7 @@ import { canTransition, validateSurveyInput, type LifecycleAction, type SurveyIn
 import { buildSummary } from "../domain/summary";
 import { validateClosesAt } from "../domain/closing";
 import { generateVisitCode, validateCodeCount } from "../domain/visitCodes";
+import { buildCsv } from "../domain/csvExport";
 import { closeExpired } from "../lib/closeExpired";
 
 export const ownerRouter = Router();
@@ -248,6 +249,48 @@ ownerRouter.get("/surveys/:id/visit-codes", async (req, res) => {
     select: { code: true, createdAt: true, usedAt: true },
   });
   res.json({ codes });
+});
+
+// FR-16 / F-10: CSV export of an own survey's responses (BR-06, BR-13)
+ownerRouter.get("/surveys/:id/export.csv", async (req, res) => {
+  const survey = await loadOwnSurvey(parseId(req.params.id), req.user!.id);
+  const responses = await prisma.response.findMany({
+    where: { surveyId: survey.id },
+    orderBy: [{ submittedAt: "asc" }, { id: "asc" }],
+    include: {
+      respondent: { select: { name: true, email: true } },
+      visitCode: { select: { code: true } },
+      answers: { include: { option: true, selections: { include: { option: true } } } },
+    },
+  });
+  const rows = responses.map((r) => ({
+    id: r.id,
+    submittedAt: r.submittedAt,
+    editedAt: r.editedAt,
+    name: r.respondent.name,
+    email: r.respondent.email,
+    visitCode: r.visitCode?.code ?? null,
+    values: survey.questions.map((q) => {
+      const a = r.answers.find((x) => x.questionId === q.id);
+      if (!a) return null;
+      if (q.type === "RATING") return a.ratingValue;
+      if (q.type === "SINGLE_CHOICE") return a.option?.label ?? null;
+      if (q.type === "MULTIPLE_CHOICE") {
+        const labels = a.selections.map((x) => x.option).sort((x, y) => x.position - y.position).map((o) => o.label);
+        return labels.length ? labels.join("; ") : null;
+      }
+      return a.textValue;
+    }),
+  }));
+  const csv = buildCsv(survey.questions, rows, { includeVisitCode: survey.requiresVisitCode });
+  res
+    .status(200)
+    .set({
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="donjaicheck-survey-${survey.id}-responses.csv"`,
+      "Cache-Control": "no-store",
+    })
+    .send(csv);
 });
 
 // FR-12 / F-06: aggregate summary of an own survey (BR-06)
