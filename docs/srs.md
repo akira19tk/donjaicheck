@@ -122,5 +122,5 @@ Accounts are created by the seed script. Self-registration is out of scope (spec
 |---|---|---|---|
 | 1.0 | 8 Nov 2026 | Sprint 1 baseline | Deliverable 1 |
 | 1.1 | 18 Nov 2026 | Student IDs in header corrected | Typo found during Lab 5 (#26) |
-| 1.3 | 25 Nov 2026 | CR-01: FR-11 extended, BR-15 added, D-04 revised | Customers need to correct mis-tapped answers shortly after submitting (docs/maintenance/CR-01-edit-response.md) |
 | 1.2 | 24 Nov 2026 | FR-15 and BR-11 made measurable; BR-12, BR-13, BR-14 added; D-08 revises D-03; D-09 added | Sprint 2/3 contracts needed testable rules for multiple choice, CSV safety and duplication; CSV export without identity would not meet the manager's need to follow up complaints |
+| 1.3 | 25 Nov 2026 | CR-01: FR-11 extended, BR-15 added, D-04 revised | Customers need to correct mis-tapped answers shortly after submitting (docs/maintenance/CR-01-edit-response.md) |

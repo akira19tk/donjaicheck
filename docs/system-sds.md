@@ -150,5 +150,5 @@ Ownership is enforced in the query itself (`where: { id, ownerId: currentUser.id
 | Version | Date | Change | Author |
 |---|---|---|---|
 | 1.0 | 2026-11-13 | Initial system design for Sprint 1 baseline | Team EN-020 T&T |
-| 1.2 | 2026-11-25 | CR-01: PUT /api/responses/:id row in §5; `Response.editedAt`, `Response.editCount` (data model). | Team EN-020 T&T |
 | 1.1 | 2026-11-14 | Implementation alignment: Prisma 7 with the pg driver adapter; seed variables `ADMIN_PASSWORD`, `DEMO_USER_PASSWORD`, `SEED_DEMO_DATA` replace `SEED_PASSWORD` (same names as the Lab 5 Starter Kit); `CLIENT_ORIGIN` removed because the Vite dev proxy and the production build are same-origin; `summary.ts` added to the domain layer. | Team EN-020 T&T |
+| 1.2 | 2026-11-25 | CR-01: PUT /api/responses/:id row in §5; `Response.editedAt`, `Response.editCount` (data model). | Team EN-020 T&T |
