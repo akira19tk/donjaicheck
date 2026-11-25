@@ -115,6 +115,9 @@ model Response {
   respondentId Int
   respondent   User     @relation(fields: [respondentId], references: [id])
   submittedAt  DateTime @default(now())
+  // CR-01 (BR-15): corrections within 30 minutes, at most 3
+  editedAt     DateTime?
+  editCount    Int      @default(0)
   answers      Answer[]
   visitCode    VisitCode?
 
