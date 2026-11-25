@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../../api";
-import { ErrorBanner, Loading } from "../../components/ui";
+import { ErrorBanner, Loading, SuccessBanner } from "../../components/ui";
 import { isChoiceType, TYPE_LABEL, type QuestionType, type SurveyDetail } from "../../types";
 
 interface DraftQuestion {
@@ -34,6 +34,7 @@ export function SurveyEditorPage() {
   const { id } = useParams();
   const editing = Boolean(id);
   const navigate = useNavigate();
+  const duplicated = Boolean((useLocation().state as { duplicated?: boolean } | null)?.duplicated);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [requiresVisitCode, setRequiresVisitCode] = useState(false);
@@ -143,6 +144,7 @@ export function SurveyEditorPage() {
           Cancel
         </Link>
       </div>
+      {duplicated && <SuccessBanner>Copy created — edit and publish when ready.</SuccessBanner>}
       <ErrorBanner message={error} />
       <form className="card" onSubmit={onSubmit} noValidate>
         <label className={`field ${fieldErrors.title ? "has-error" : ""}`}>

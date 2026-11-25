@@ -27,6 +27,8 @@ export const PROTECTED_ROUTES: ProtectedRoute[] = [
   { method: "post", path: "/api/owner/surveys/:id/visit-codes", role: "SURVEY_OWNER" },
   // F-10
   { method: "get", path: "/api/owner/surveys/:id/export.csv", role: "SURVEY_OWNER" },
+  // F-13
+  { method: "post", path: "/api/owner/surveys/:id/duplicate", role: "SURVEY_OWNER" },
   // F-06
   { method: "get", path: "/api/owner/surveys/:id/summary", role: "SURVEY_OWNER" },
   // F-05 (respondent)
