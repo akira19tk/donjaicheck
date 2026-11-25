@@ -1,6 +1,6 @@
 # Sprint 2 — Software Test Specification (STS)
 
-Version 1.0 (pre-implementation). Levels as Sprint 1: **U** unit, **API** API + database integration (Vitest + Supertest, `TEST_DATABASE_URL`), **E2E** Playwright, **M** manual. Fixtures: owner A, owner B, respondents R1, R2 (test helper, password from env). Sprint 1 tests (TEST-01…06, TEST-U-01…03, TEST-E2E-01/02) are re-run as the regression suite.
+Version 1.1 (1.0 pre-implementation; 1.1 records the implemented test files, client tests and E2E-03 together with CR-01's E2E check). Levels as Sprint 1: **U** unit, **API** API + database integration (Vitest + Supertest, `TEST_DATABASE_URL`), **E2E** Playwright, **M** manual. Fixtures: owner A, owner B, respondents R1, R2 (test helper, password from env). Sprint 1 tests (TEST-01…06, TEST-U-01…03, TEST-E2E-01/02) are re-run as the regression suite.
 
 | Test ID | AC | Level | Preconditions / input | Action | Expected result |
 |---|---|---|---|---|---|
@@ -49,3 +49,5 @@ Version 1.0 (pre-implementation). Levels as Sprint 1: **U** unit, **API** API + 
 | TEST-U-10 | `server/tests/unit/csvExport.test.ts` |
 | TEST-10-01…05 | `server/tests/api/f10-export.test.ts` |
 | TEST-E2E-03 | `e2e/sprint2.spec.ts` |
+| Client (UI) | `client/tests/VisitCodeField.test.tsx` (F-07), `MultipleChoice.test.tsx` (F-09), `DownloadCsv.test.tsx` (F-10) |
+| TEST-E2E-03 (+ CR-01 edit) | `e2e/sprint2.spec.ts` — owner generates a code via the UI instead of a seeded code (no seed change needed) |

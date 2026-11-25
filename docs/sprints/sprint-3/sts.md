@@ -1,6 +1,6 @@
 # Sprint 3 — Software Test Specification (STS)
 
-Version 1.0 (pre-implementation). Same levels and fixtures as Sprint 2. Sprint 1–2 tests are the regression suite.
+Version 1.1 (1.0 pre-implementation; 1.1: F-13 implemented — TEST-U-13, TEST-13-01…05 and TEST-E2E-05 in `e2e/sprint2.spec.ts`; F-11/F-12 still planned). Same levels and fixtures as Sprint 2. Sprint 1–2 tests are the regression suite.
 
 | Test ID | AC | Level | Preconditions / input | Action | Expected result |
 |---|---|---|---|---|---|
