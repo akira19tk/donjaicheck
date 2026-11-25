@@ -32,4 +32,6 @@ export const PROTECTED_ROUTES: ProtectedRoute[] = [
   { method: "get", path: "/api/surveys/:id", role: "RESPONDENT" },
   { method: "post", path: "/api/surveys/:id/responses", role: "RESPONDENT" },
   { method: "get", path: "/api/responses/:id", role: "RESPONDENT" },
+  // CR-01
+  { method: "put", path: "/api/responses/:id", role: "RESPONDENT" },
 ];
