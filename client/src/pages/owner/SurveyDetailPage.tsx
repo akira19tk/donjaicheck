@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../../api";
 import { ErrorBanner, Loading, StatusBadge, SuccessBanner } from "../../components/ui";
 import { formatDate, formatVisitCode, fromLocalInput, toLocalInput, TYPE_LABEL, type SurveyDetail, type VisitCodeItem } from "../../types";
@@ -129,8 +129,24 @@ export function SurveyDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const navigate = useNavigate();
+
+  /** F-13: copy this survey into a new draft and open it in the editor. */
+  const duplicate = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await apiFetch<{ survey: SurveyDetail }>(`/api/owner/surveys/${id}/duplicate`, { method: "POST" });
+      navigate(`/owner/surveys/${r.survey.id}/edit`, { state: { duplicated: true } });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   useEffect(() => {
+    setNotice(null);
     apiFetch<{ survey: SurveyDetail }>(`/api/owner/surveys/${id}`)
       .then((r) => setSurvey(r.survey))
       .catch((e: Error) => setError(e instanceof ApiError && e.status === 404 ? "Survey not found." : e.message));
@@ -184,6 +200,9 @@ export function SurveyDetailPage() {
               Close survey
             </button>
           )}
+          <button className="btn" onClick={duplicate} disabled={busy}>
+            Duplicate
+          </button>
           {survey.status !== "DRAFT" && (
             <Link className="btn btn-primary" to={`/owner/surveys/${survey.id}/summary`}>
               View summary

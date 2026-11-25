@@ -88,3 +88,19 @@ test("TEST-E2E-03 visit code + multiple choice, then TEST-E2E-CR01 correct the a
   await expect(page.getByText("5.00")).toBeVisible();
   await expect(page.getByRole("img", { name: "Sticky rice: 1" })).toBeVisible();
 });
+
+test("TEST-E2E-05 (F-13) owner duplicates a survey and lands in the editor of the copy", async ({ page }) => {
+  test.skip(!OWNER.password, "Set ADMIN_PASSWORD in server/.env");
+  const title = `E2E duplicate ${Date.now()}`;
+  await login(page, OWNER);
+  await page.getByRole("link", { name: "+ New survey" }).click();
+  await page.getByLabel("Title *").fill(title);
+  await page.getByLabel("Question 1 *").fill("How was the service?");
+  await page.getByRole("button", { name: "Save draft" }).click();
+  await expect(page.getByRole("heading", { name: title })).toBeVisible();
+  await page.getByRole("button", { name: "Duplicate" }).click();
+  await expect(page.getByText("Copy created — edit and publish when ready.")).toBeVisible();
+  await expect(page.getByLabel("Title *")).toHaveValue(`Copy of ${title}`);
+  await expect(page.getByLabel("Question 1 *")).toHaveValue("How was the service?");
+  await shot(page, "e2e05-duplicate");
+});
