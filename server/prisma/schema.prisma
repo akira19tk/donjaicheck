@@ -62,11 +62,14 @@ model Survey {
   updatedAt   DateTime     @updatedAt
   publishedAt DateTime?
   closedAt    DateTime?
+  // F-08 (BR-11): optional scheduled closing time
+  closesAt    DateTime?
   questions   Question[]
   responses   Response[]
 
   @@index([ownerId])
   @@index([status])
+  @@index([status, closesAt])
 }
 
 model Question {
