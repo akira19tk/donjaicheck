@@ -60,7 +60,7 @@ erDiagram
 | Survey | id, ownerId → User, title, description, status (`DRAFT` \| `PUBLISHED` \| `CLOSED`), createdAt, updatedAt, publishedAt?, closedAt? | ownership link for BR-06; status changes only via lifecycle endpoints (BR-04) |
 | Question | id, surveyId → Survey, position, text, type (`RATING` \| `SINGLE_CHOICE` \| `TEXT`), required | unique (surveyId, position); cascade delete with survey |
 | QuestionOption | id, questionId → Question, position, label | unique (questionId, label) |
-| Response | id, surveyId → Survey, respondentId → User, submittedAt | **unique (surveyId, respondentId)** — BR-01 |
+| Response | id, surveyId → Survey, respondentId → User, submittedAt, editedAt, editCount (CR-01) | **unique (surveyId, respondentId)** — BR-01 |
 | Answer | id, responseId → Response, questionId → Question, ratingValue?, optionId? → QuestionOption, textValue? | unique (responseId, questionId); CHECK ratingValue 1–5 |
 
 **Database setup.** `prisma migrate deploy` applies committed migrations (`init`, `surveys`, `responses`); migrations only add tables/columns so an older image still works after a rollback (Lab 5). The `responses` migration adds a hand-written CHECK constraint `Answer_ratingValue_range` (1–5). `npm run prisma:seed` is idempotent (existing users and surveys are kept) and creates 2 owners (password `ADMIN_PASSWORD`); when `SEED_DEMO_DATA=true` it also creates 3 respondents (password `DEMO_USER_PASSWORD`), one published sample survey ("Dinner experience at Donjai Siam") and one draft. The seed stops with an error if a required password variable is missing.
@@ -110,6 +110,7 @@ Detailed endpoint contracts are in the Sprint 1 feature contracts.
 | Read published survey | GET /api/surveys/:id | 401 | ✅ PUBLISHED/CLOSED only | 403 |
 | Submit response | POST /api/surveys/:id/responses | 401 | ✅ once (BR-01/02/03) | 403 |
 | Read response | GET /api/responses/:id | 401 | ✅ own only, else 404 | 403 |
+| Correct own response (CR-01) | PUT /api/responses/:id | 401 | ✅ own only, else 404; BR-15 limits (409) | 403 |
 
 Ownership is enforced in the query itself (`where: { id, ownerId: currentUser.id }`), so another owner's survey is indistinguishable from a missing one (D-07).
 
@@ -149,4 +150,5 @@ Ownership is enforced in the query itself (`where: { id, ownerId: currentUser.id
 | Version | Date | Change | Author |
 |---|---|---|---|
 | 1.0 | 2026-11-13 | Initial system design for Sprint 1 baseline | Team EN-020 T&T |
+| 1.2 | 2026-11-25 | CR-01: PUT /api/responses/:id row in §5; `Response.editedAt`, `Response.editCount` (data model). | Team EN-020 T&T |
 | 1.1 | 2026-11-14 | Implementation alignment: Prisma 7 with the pg driver adapter; seed variables `ADMIN_PASSWORD`, `DEMO_USER_PASSWORD`, `SEED_DEMO_DATA` replace `SEED_PASSWORD` (same names as the Lab 5 Starter Kit); `CLIENT_ORIGIN` removed because the Vite dev proxy and the production build are same-origin; `summary.ts` added to the domain layer. | Team EN-020 T&T |

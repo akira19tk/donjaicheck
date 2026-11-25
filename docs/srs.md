@@ -5,7 +5,7 @@
 | Course | CPE334 Software Engineering, Semester 1/2026 |
 | Team | EN-020 T&T — Thanyagorn (67070503490), Thanaporn (67070503416) |
 | Theme | 10. Review, Feedback, and Survey System |
-| Version | 1.2 (Sprint 2 contracts; see §8 version history) |
+| Version | 1.3 (CR-01; see §8 version history) |
 
 ## 1. Stakeholder problem and context
 
@@ -57,7 +57,7 @@ Accounts are created by the seed script. Self-registration is out of scope (spec
 | FR-08 | A Survey Owner lists their own surveys with status and response count. | 1 |
 | FR-09 | A Respondent lists published surveys and sees whether they have already responded. | 1 |
 | FR-10 | A Respondent submits a response to a published survey and sees a confirmation with the submission time. | 1 |
-| FR-11 | A Respondent views their own submitted response. | 1 |
+| FR-11 | A Respondent views their own submitted response and may correct it within the limits of BR-15 (CR-01). | 1 (correction: CR-01) |
 | FR-12 | A Survey Owner views an aggregate summary of their own survey: response count, average and distribution for each rating question, count per option for each single-choice question, and the list of text answers. | 1 |
 | FR-13 | A Survey Owner restricts a survey to customers who enter a valid visit code. | 2 |
 | FR-14 | A Survey Owner sets a closing date/time; the survey stops accepting responses after it. | 2 |
@@ -84,6 +84,7 @@ Accounts are created by the seed script. Self-registration is out of scope (spec
 | BR-11 | A survey with a closing time stops accepting responses at that time and is shown as CLOSED. The closing time must be in the future and at most one year ahead when set. | 2 |
 | BR-12 | A MULTIPLE_CHOICE question has 2–10 unique options, `minSelections` 0…options and `maxSelections` 1…options with min ≤ max (required ⇒ min ≥ 1). An answer selects distinct options of that question, between min and max. | 2 |
 | BR-13 | Exported CSV cells are RFC 4180 quoted and cells starting with `=`, `+`, `-`, `@`, TAB or CR are prefixed with `'` (formula-injection protection). | 2 |
+| BR-15 | A respondent may replace the answers of their own response only while it is less than 30 minutes since submission, it has been edited fewer than 3 times, and the survey still accepts responses (BR-02, BR-11). The response keeps its id and submission time; answers are validated as in BR-03. (CR-01) | 1 (CR-01) |
 | BR-14 | Duplicating a survey creates a new DRAFT of the same owner with the questions, options and settings copied, but never responses, visit codes or schedule. | 3 |
 
 ## 6. Non-Functional Requirements (NFR)
@@ -106,7 +107,7 @@ Accounts are created by the seed script. Self-registration is out of scope (spec
 | D-01 | What does "eligible respondent" mean in Sprint 1? | Any signed-in RESPONDENT is eligible for any PUBLISHED survey. Visit-code eligibility is FR-13/BR-09 in Sprint 2. |
 | D-02 | Are Sprint 1 surveys anonymous? | No. Sprint 1 surveys are **identified** (response linked to respondent) and the UI says so. Anonymous mode is Sprint 3 (FR-17, BR-10). |
 | D-03 | Can owners see who wrote each text answer? | Not in Sprint 1. The summary lists text answers without names. Raw-data access rules are revisited with CSV export (Sprint 2). |
-| D-04 | Can a respondent change a submitted response? | No. Responses are final (supports BR-01 and simple auditing). |
+| D-04 | Can a respondent change a submitted response? | ~~No. Responses are final.~~ **Revised by CR-01 (v1.3):** yes, for 30 minutes and at most 3 times while the survey is open (BR-15); after that the response is final. |
 | D-05 | Can a closed survey be reopened? | No (BR-04). The owner duplicates it instead (FR-19, Sprint 3). |
 | D-06 | Who creates accounts? | The seed script creates demo accounts; passwords come from an environment variable, never from code. |
 | D-07 | What happens when an owner requests another owner's survey? | 404 Not Found, so the existence of other owners' surveys is not revealed. |
@@ -121,4 +122,5 @@ Accounts are created by the seed script. Self-registration is out of scope (spec
 |---|---|---|---|
 | 1.0 | 8 Nov 2026 | Sprint 1 baseline | Deliverable 1 |
 | 1.1 | 18 Nov 2026 | Student IDs in header corrected | Typo found during Lab 5 (#26) |
+| 1.3 | 25 Nov 2026 | CR-01: FR-11 extended, BR-15 added, D-04 revised | Customers need to correct mis-tapped answers shortly after submitting (docs/maintenance/CR-01-edit-response.md) |
 | 1.2 | 24 Nov 2026 | FR-15 and BR-11 made measurable; BR-12, BR-13, BR-14 added; D-08 revises D-03; D-09 added | Sprint 2/3 contracts needed testable rules for multiple choice, CSV safety and duplication; CSV export without identity would not meet the manager's need to follow up complaints |
