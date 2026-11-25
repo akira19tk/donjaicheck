@@ -5,7 +5,7 @@
 | Course | CPE334 Software Engineering, Semester 1/2026 |
 | Team | EN-020 T&T — Thanyagorn (67070503490), Thanaporn (67070503416) |
 | Theme | 10. Review, Feedback, and Survey System |
-| Version | 1.0 (Sprint 1 baseline) |
+| Version | 1.2 (Sprint 2 contracts; see §8 version history) |
 
 ## 1. Stakeholder problem and context
 
@@ -61,7 +61,7 @@ Accounts are created by the seed script. Self-registration is out of scope (spec
 | FR-12 | A Survey Owner views an aggregate summary of their own survey: response count, average and distribution for each rating question, count per option for each single-choice question, and the list of text answers. | 1 |
 | FR-13 | A Survey Owner restricts a survey to customers who enter a valid visit code. | 2 |
 | FR-14 | A Survey Owner sets a closing date/time; the survey stops accepting responses after it. | 2 |
-| FR-15 | A Survey Owner adds MULTIPLE_CHOICE questions. | 2 |
+| FR-15 | A Survey Owner adds MULTIPLE_CHOICE questions with a minimum and maximum number of selections. | 2 |
 | FR-16 | A Survey Owner exports the responses of their own survey as CSV. | 2 |
 | FR-17 | A Survey Owner creates an anonymous survey whose stored answers cannot be linked to a respondent. | 3 |
 | FR-18 | A Survey Owner filters the summary by submission date range and sees per-question charts. | 3 |
@@ -81,7 +81,10 @@ Accounts are created by the seed script. Self-registration is out of scope (spec
 | BR-08 | A survey title is 1–120 characters; a survey has at most 20 questions (at least 1 to publish, see BR-04); question text is 1–200 characters; a SINGLE_CHOICE question has 2–10 options with unique, non-empty labels. | 1 |
 | BR-09 | For an eligibility-restricted survey, a response requires an unused visit code issued for that survey; each code can be used once. | 2 |
 | BR-10 | In an anonymous survey, the stored answers have no link to the respondent; participation is recorded separately only to enforce BR-01; aggregate results are shown only after at least 3 responses. | 3 |
-| BR-11 | A survey with a closing time stops accepting responses at that time and is shown as CLOSED. | 2 |
+| BR-11 | A survey with a closing time stops accepting responses at that time and is shown as CLOSED. The closing time must be in the future and at most one year ahead when set. | 2 |
+| BR-12 | A MULTIPLE_CHOICE question has 2–10 unique options, `minSelections` 0…options and `maxSelections` 1…options with min ≤ max (required ⇒ min ≥ 1). An answer selects distinct options of that question, between min and max. | 2 |
+| BR-13 | Exported CSV cells are RFC 4180 quoted and cells starting with `=`, `+`, `-`, `@`, TAB or CR are prefixed with `'` (formula-injection protection). | 2 |
+| BR-14 | Duplicating a survey creates a new DRAFT of the same owner with the questions, options and settings copied, but never responses, visit codes or schedule. | 3 |
 
 ## 6. Non-Functional Requirements (NFR)
 
@@ -107,5 +110,15 @@ Accounts are created by the seed script. Self-registration is out of scope (spec
 | D-05 | Can a closed survey be reopened? | No (BR-04). The owner duplicates it instead (FR-19, Sprint 3). |
 | D-06 | Who creates accounts? | The seed script creates demo accounts; passwords come from an environment variable, never from code. |
 | D-07 | What happens when an owner requests another owner's survey? | 404 Not Found, so the existence of other owners' surveys is not revealed. |
+| D-08 | Does the CSV export identify respondents? (revises D-03) | Yes for **identified** surveys: the owner already knows customers by account (A-01) and needs the export to follow up complaints. Anonymous surveys (F-11) never export identity. The summary page stays without names. |
+| D-09 | How are visit codes delivered? | The owner generates codes in the app and prints them on receipts; the system does not send codes. |
 | A-01 | Customers have an account at the restaurant (loyalty membership). | Assumed for the identified Sprint 1 mode. |
 | A-02 | One restaurant organisation uses the system. | Assumed; multi-tenancy is excluded. |
+
+## 8. Version history
+
+| Version | Date | Change | Rationale |
+|---|---|---|---|
+| 1.0 | 8 Nov 2026 | Sprint 1 baseline | Deliverable 1 |
+| 1.1 | 18 Nov 2026 | Student IDs in header corrected | Typo found during Lab 5 (#26) |
+| 1.2 | 24 Nov 2026 | FR-15 and BR-11 made measurable; BR-12, BR-13, BR-14 added; D-08 revises D-03; D-09 added | Sprint 2/3 contracts needed testable rules for multiple choice, CSV safety and duplication; CSV export without identity would not meet the manager's need to follow up complaints |
