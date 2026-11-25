@@ -65,3 +65,37 @@ describe("TEST-U-02 validateResponse", () => {
     expect(problems(undefined)).toEqual(["answers: Answers must be a list"]);
   });
 });
+
+/** TEST-U-09b — F-09 multiple-choice answers (BR-03 extended, BR-12) */
+describe("TEST-U-09b multiple-choice answers", () => {
+  const mcq = { id: 50, type: "MULTIPLE_CHOICE" as const, required: true, optionIds: [501, 502, 503, 504], minSelections: 1, maxSelections: 2 };
+  const optional = { ...mcq, id: 60, required: false, minSelections: 0, optionIds: [601, 602] };
+  const run = (optionIds: unknown, q = mcq) => validateResponse([q], [{ questionId: q.id, optionIds }]);
+  const msg = (r: ReturnType<typeof run>) => (r.ok ? null : r.details[0].message);
+
+  it("accepts selections within min..max and returns them", () => {
+    const r = run([502, 501]);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.answers).toEqual([{ questionId: 50, optionIds: [502, 501] }]);
+  });
+
+  it.each([
+    ["empty on a required question", [], "Required"],
+    ["missing on a required question", undefined, "Required"],
+    ["more than max", [501, 502, 503], "Select at most 2"],
+    ["duplicate option", [501, 501], "Invalid selection"],
+    ["not a list", 501, "Invalid selection"],
+    ["option of another question", [601], "Invalid option"],
+  ])("%s", (_label, ids, expected) => {
+    expect(msg(run(ids))).toBe(expected);
+  });
+
+  it("checks the minimum when it is above 1", () => {
+    expect(msg(run([501], { ...mcq, minSelections: 2, maxSelections: 3 }))).toBe("Select at least 2");
+  });
+
+  it("an empty list on an optional question is 'not answered' (no answer stored)", () => {
+    const r = run([], optional);
+    expect(r.ok && r.answers).toEqual([]);
+  });
+});
