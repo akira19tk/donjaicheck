@@ -6,6 +6,7 @@ import { requireAuth, requireRole } from "../middleware/auth";
 import { AppError, notFound, validationFailed } from "../lib/errors";
 import { validateResponse } from "../domain/responseRules";
 import { parseId } from "./owner";
+import { closeExpired } from "../lib/closeExpired";
 
 export const respondentRouter = Router();
 // Guards are per route (this router is mounted on /api, so a router-wide guard would catch every /api path).
@@ -14,7 +15,7 @@ const respondentRole = requireRole("RESPONDENT");
 const alreadyResponded = () => new AppError(409, "ALREADY_RESPONDED", "You have already answered this survey");
 
 // FR-09: published surveys, with "already answered" flag for the caller
-respondentRouter.get("/surveys", requireAuth, respondentRole, async (req, res) => {
+respondentRouter.get("/surveys", requireAuth, respondentRole, closeExpired, async (req, res) => {
   const surveys = await prisma.survey.findMany({
     where: { status: "PUBLISHED" },
     orderBy: [{ publishedAt: "desc" }, { id: "desc" }],
@@ -36,7 +37,7 @@ respondentRouter.get("/surveys", requireAuth, respondentRole, async (req, res) =
 });
 
 // Survey form. DRAFT surveys are invisible to respondents (404).
-respondentRouter.get("/surveys/:id", requireAuth, respondentRole, async (req, res) => {
+respondentRouter.get("/surveys/:id", requireAuth, respondentRole, closeExpired, async (req, res) => {
   const survey = await prisma.survey.findFirst({
     where: { id: parseId(req.params.id), status: { in: ["PUBLISHED", "CLOSED"] } },
     include: {
@@ -51,6 +52,7 @@ respondentRouter.get("/surveys/:id", requireAuth, respondentRole, async (req, re
       title: survey.title,
       description: survey.description,
       status: survey.status,
+      closesAt: survey.closesAt,
       questions: survey.questions.map((q) => ({
         id: q.id,
         position: q.position,
@@ -65,7 +67,7 @@ respondentRouter.get("/surveys/:id", requireAuth, respondentRole, async (req, re
 });
 
 // FR-10: submit a response (order of checks per F-05 contract step 3)
-respondentRouter.post("/surveys/:id/responses", requireAuth, respondentRole, async (req, res) => {
+respondentRouter.post("/surveys/:id/responses", requireAuth, respondentRole, closeExpired, async (req, res) => {
   const surveyId = parseId(req.params.id);
   const respondentId = req.user!.id;
   const survey = await prisma.survey.findFirst({
@@ -88,7 +90,10 @@ respondentRouter.post("/surveys/:id/responses", requireAuth, respondentRole, asy
   try {
     const created = await prisma.$transaction(async (tx) => {
       // Re-check the status inside the transaction so a survey closed a moment ago is not answered.
-      const open = await tx.survey.count({ where: { id: surveyId, status: "PUBLISHED" } });
+      // F-08: the deadline is re-checked here too, so a late submission is rejected even without a prior read.
+      const open = await tx.survey.count({
+        where: { id: surveyId, status: "PUBLISHED", OR: [{ closesAt: null }, { closesAt: { gt: new Date() } }] },
+      });
       if (!open) throw new AppError(409, "SURVEY_NOT_OPEN", "This survey is closed and no longer accepts responses");
       return tx.response.create({
         data: { surveyId, respondentId, answers: { create: result.answers } },

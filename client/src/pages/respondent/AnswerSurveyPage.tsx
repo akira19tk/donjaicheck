@@ -3,12 +3,14 @@ import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { apiFetch, ApiError } from "../../api";
 import { ErrorBanner, Loading } from "../../components/ui";
 import type { Question, SurveyStatus } from "../../types";
+import { formatDate } from "../../types";
 
 interface RespondentSurvey {
   id: number;
   title: string;
   description: string;
   status: SurveyStatus;
+  closesAt?: string | null;
   questions: Question[];
 }
 
@@ -73,6 +75,7 @@ export function AnswerSurveyPage() {
       ) : (
         <form className="card" onSubmit={onSubmit} noValidate>
           <p className="identified-note">This is an identified survey: your answers are linked to your account.</p>
+          {survey.closesAt && <p className="meta">Open until {formatDate(survey.closesAt)}</p>}
           <ErrorBanner message={error} />
           {survey.questions.map((q) => {
             const err = fieldErrors[`answers[q:${q.id}]`];

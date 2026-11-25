@@ -4,7 +4,7 @@
 |---|---|
 | Requirements | FR-14, BR-11, BR-02 (extended), BR-06 |
 | Depends on | F-04 (lifecycle), F-05 (response) |
-| Version | 1.0 (pre-implementation) |
+| Version | 1.1 (1.0 pre-implementation; 1.1 UI revision, see end) |
 
 ## Behaviour and workflow
 1. On the survey editor (DRAFT) or the survey detail page (DRAFT or PUBLISHED) the owner sets an optional **Closes at** date/time, or clears it.
@@ -53,3 +53,9 @@ Editor: optional `datetime-local` field "Closes at (optional)" with inline error
 
 ## Definition of Done (feature)
 Product DoD plus TEST-08-01…06 and TEST-U-08 pass; TEST-08-03 and TEST-U-08 committed failing first.
+
+## Version history
+| Version | Change | Reason |
+|---|---|---|
+| 1.0 | Contract before implementation | — |
+| 1.1 | The closing time is set only on the survey **detail page** (box with Save/Remove), not as an extra field in the editor. API unchanged (`closesAt` is still accepted on create/edit; an edit that omits it keeps the stored value). | One place to set the schedule for both DRAFT and PUBLISHED surveys; avoids two forms that could disagree. Agreed by both students during implementation of #F-08. |

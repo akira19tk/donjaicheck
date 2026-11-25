@@ -6,9 +6,11 @@ import { requireAuth, requireRole } from "../middleware/auth";
 import { AppError, notFound, validationFailed } from "../lib/errors";
 import { canTransition, validateSurveyInput, type LifecycleAction, type SurveyInput } from "../domain/surveyRules";
 import { buildSummary } from "../domain/summary";
+import { validateClosesAt } from "../domain/closing";
+import { closeExpired } from "../lib/closeExpired";
 
 export const ownerRouter = Router();
-ownerRouter.use(requireAuth, requireRole("SURVEY_OWNER"));
+ownerRouter.use(requireAuth, requireRole("SURVEY_OWNER"), closeExpired);
 
 const surveyInclude = {
   questions: {
@@ -45,6 +47,7 @@ export function toSurveyDetail(s: SurveyWithQuestions, responseCount: number) {
     createdAt: s.createdAt,
     publishedAt: s.publishedAt,
     closedAt: s.closedAt,
+    closesAt: s.closesAt,
     responseCount,
     questions: s.questions.map((q) => ({
       id: q.id,
@@ -95,17 +98,27 @@ ownerRouter.get("/surveys", async (req, res) => {
       createdAt: s.createdAt,
       publishedAt: s.publishedAt,
       closedAt: s.closedAt,
+      closesAt: s.closesAt,
     })),
   });
 });
 
 // FR-04: create draft
+/** Validates the survey body and the optional F-08 closesAt together, reporting every problem at once. */
+function validateBody(body: unknown) {
+  const result = validateSurveyInput(body);
+  const raw = (typeof body === "object" && body !== null ? (body as Record<string, unknown>).closesAt : undefined);
+  const closing = validateClosesAt(raw, new Date());
+  const details = [...(result.ok ? [] : result.details), ...(closing.ok ? [] : closing.details)];
+  if (!result.ok || !closing.ok) throw validationFailed(details);
+  // closesAt absent -> undefined, so an edit that does not send it keeps the stored schedule.
+  return { ...result.value, closesAt: raw === undefined ? undefined : closing.value };
+}
+
 ownerRouter.post("/surveys", async (req, res) => {
-  const result = validateSurveyInput(req.body);
-  if (!result.ok) throw validationFailed(result.details);
-  const { title, description, questions } = result.value;
+  const { title, description, questions, closesAt } = validateBody(req.body);
   const created = await prisma.survey.create({
-    data: { ownerId: req.user!.id, title, description, questions: { create: questionCreate(questions) } },
+    data: { ownerId: req.user!.id, title, description, closesAt, questions: { create: questionCreate(questions) } },
   });
   res.status(201).json(await detailResponse(created.id));
 });
@@ -121,15 +134,13 @@ ownerRouter.put("/surveys/:id", async (req, res) => {
   if (survey.status !== "DRAFT") {
     throw new AppError(409, "SURVEY_NOT_EDITABLE", "Only draft surveys can be edited");
   }
-  const result = validateSurveyInput(req.body);
-  if (!result.ok) throw validationFailed(result.details);
-  const { title, description, questions } = result.value;
+  const { title, description, questions, closesAt } = validateBody(req.body);
 
   await prisma.$transaction(async (tx) => {
     // Re-check the status inside the transaction so a concurrent publish wins safely.
     const updated = await tx.survey.updateMany({
       where: { id: survey.id, ownerId: req.user!.id, status: "DRAFT" },
-      data: { title, description },
+      data: { title, description, closesAt },
     });
     if (updated.count === 0) throw new AppError(409, "SURVEY_NOT_EDITABLE", "Only draft surveys can be edited");
     await tx.question.deleteMany({ where: { surveyId: survey.id } });
@@ -150,6 +161,9 @@ async function transition(surveyId: number, ownerId: number, action: LifecycleAc
     throw new AppError(409, "NO_QUESTIONS", "Add at least one question before publishing");
   }
   const now = new Date();
+  if (action === "publish" && survey.closesAt && survey.closesAt.getTime() <= now.getTime()) {
+    throw new AppError(409, "CLOSING_TIME_PASSED", "The closing time has already passed; change it before publishing");
+  }
   const result = await prisma.survey.updateMany({
     where: { id: survey.id, ownerId, status: survey.status },
     data: action === "publish" ? { status: "PUBLISHED", publishedAt: now } : { status: "CLOSED", closedAt: now },
@@ -167,6 +181,20 @@ ownerRouter.post("/surveys/:id/close", async (req, res) => {
   const id = parseId(req.params.id);
   await transition(id, req.user!.id, "close");
   res.json(await detailResponse(id));
+});
+
+// FR-14 / F-08: set or clear the closing time of an own DRAFT or PUBLISHED survey (BR-11)
+ownerRouter.put("/surveys/:id/closing", async (req, res) => {
+  const survey = await loadOwnSurvey(parseId(req.params.id), req.user!.id);
+  if (survey.status === "CLOSED") throw new AppError(409, "SURVEY_CLOSED", "A closed survey cannot be scheduled");
+  const closing = validateClosesAt(req.body?.closesAt, new Date());
+  if (!closing.ok) throw validationFailed(closing.details);
+  const updated = await prisma.survey.updateMany({
+    where: { id: survey.id, ownerId: req.user!.id, status: { in: ["DRAFT", "PUBLISHED"] } },
+    data: { closesAt: closing.value },
+  });
+  if (updated.count === 0) throw new AppError(409, "SURVEY_CLOSED", "A closed survey cannot be scheduled");
+  res.json(await detailResponse(survey.id));
 });
 
 // FR-12 / F-06: aggregate summary of an own survey (BR-06)
