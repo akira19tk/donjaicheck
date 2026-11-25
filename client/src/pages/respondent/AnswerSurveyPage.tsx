@@ -15,7 +15,15 @@ interface RespondentSurvey {
   questions: Question[];
 }
 
-type AnswerValue = { rating?: number; optionId?: number; text?: string };
+type AnswerValue = { rating?: number; optionId?: number; optionIds?: number[]; text?: string };
+
+/** F-09 hint, e.g. "Choose 1–2" / "Choose up to 3". */
+export const selectionHint = (q: Question) => {
+  const max = q.maxSelections ?? q.options.length;
+  const min = q.minSelections ?? (q.required ? 1 : 0);
+  if (min === max) return `Choose ${min}`;
+  return min > 0 ? `Choose ${min}–${max}` : `Choose up to ${max}`;
+};
 
 /** FR-10: answer a published survey (BR-01..BR-03 enforced by the API). */
 export function AnswerSurveyPage() {
@@ -48,7 +56,7 @@ export function AnswerSurveyPage() {
     setFieldErrors({});
     const body = {
       answers: survey.questions
-        .filter((q) => answers[q.id] !== undefined)
+        .filter((q) => answers[q.id] !== undefined && !(answers[q.id].optionIds && answers[q.id].optionIds!.length === 0))
         .map((q) => ({ questionId: q.id, ...answers[q.id] })),
       ...(survey.requiresVisitCode ? { visitCode } : {}),
     };
@@ -127,6 +135,26 @@ export function AnswerSurveyPage() {
                         {o.label}
                       </label>
                     ))}
+                  </div>
+                )}
+                {q.type === "MULTIPLE_CHOICE" && (
+                  <div className="choices">
+                    <small className="muted">{selectionHint(q)}</small>
+                    {q.options.map((o) => {
+                      const picked = value.optionIds ?? [];
+                      return (
+                        <label key={o.id}>
+                          <input
+                            type="checkbox"
+                            checked={picked.includes(o.id)}
+                            onChange={(e) =>
+                              set(q.id, { optionIds: e.target.checked ? [...picked, o.id] : picked.filter((x) => x !== o.id) })
+                            }
+                          />
+                          {o.label}
+                        </label>
+                      );
+                    })}
                   </div>
                 )}
                 {q.type === "TEXT" && (

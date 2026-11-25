@@ -70,3 +70,40 @@ describe("TEST-U-03 validateSurveyInput (BR-08)", () => {
     });
   });
 });
+
+/** TEST-U-09a — F-09 MULTIPLE_CHOICE definition rules (BR-12) */
+describe("TEST-U-09a multiple-choice definitions (BR-12)", () => {
+  const mc = (n: number, extra: Record<string, unknown> = {}) =>
+    q({ type: "MULTIPLE_CHOICE", options: Array.from({ length: n }, (_, i) => `Opt ${i + 1}`), ...extra });
+
+  it("accepts 2 and 10 options and rejects 1 and 11", () => {
+    expect(fields({ title: "T", questions: [mc(2)] })).toEqual([]);
+    expect(fields({ title: "T", questions: [mc(10)] })).toEqual([]);
+    expect(fields({ title: "T", questions: [mc(1)] })).toEqual(["questions[0].options"]);
+    expect(fields({ title: "T", questions: [mc(11)] })).toEqual(["questions[0].options"]);
+  });
+
+  it("rejects duplicate labels", () => {
+    expect(fields({ title: "T", questions: [q({ type: "MULTIPLE_CHOICE", options: ["Rice", "rice"] })] })).toEqual([
+      "questions[0].options",
+    ]);
+  });
+
+  it("checks min/max selections", () => {
+    expect(fields({ title: "T", questions: [mc(4, { minSelections: 1, maxSelections: 4 })] })).toEqual([]);
+    expect(fields({ title: "T", questions: [mc(4, { minSelections: 3, maxSelections: 2 })] })).toEqual(["questions[0].minSelections"]);
+    expect(fields({ title: "T", questions: [mc(4, { maxSelections: 5 })] })).toEqual(["questions[0].maxSelections"]);
+    expect(fields({ title: "T", questions: [mc(4, { maxSelections: 0 })] })).toEqual(["questions[0].maxSelections"]);
+    expect(fields({ title: "T", questions: [mc(4, { minSelections: 1.5 })] })).toEqual(["questions[0].minSelections"]);
+    expect(fields({ title: "T", questions: [mc(4, { required: true, minSelections: 0 })] })).toEqual(["questions[0].minSelections"]);
+    expect(fields({ title: "T", questions: [mc(4, { required: false, minSelections: 0 })] })).toEqual([]);
+  });
+
+  it("applies defaults: min 1 when required (0 when optional), max = number of options", () => {
+    const r = validateSurveyInput({ title: "T", questions: [mc(4), mc(3, { required: false })] });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.questions[0]).toMatchObject({ minSelections: 1, maxSelections: 4 });
+    expect(r.value.questions[1]).toMatchObject({ minSelections: 0, maxSelections: 3 });
+  });
+});

@@ -1,5 +1,8 @@
 export type SurveyStatus = "DRAFT" | "PUBLISHED" | "CLOSED";
-export type QuestionType = "RATING" | "SINGLE_CHOICE" | "TEXT";
+export type QuestionType = "RATING" | "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "TEXT";
+
+/** Question types that have options. */
+export const isChoiceType = (t: QuestionType) => t === "SINGLE_CHOICE" || t === "MULTIPLE_CHOICE";
 
 export interface Option {
   id: number;
@@ -13,6 +16,9 @@ export interface Question {
   text: string;
   type: QuestionType;
   required: boolean;
+  /** F-09: only for MULTIPLE_CHOICE */
+  minSelections?: number | null;
+  maxSelections?: number | null;
   options: Option[];
 }
 
@@ -46,6 +52,7 @@ export interface SurveyListItem {
 export const TYPE_LABEL: Record<QuestionType, string> = {
   RATING: "Rating 1–5",
   SINGLE_CHOICE: "Single choice",
+  MULTIPLE_CHOICE: "Multiple choice",
   TEXT: "Short text",
 };
 

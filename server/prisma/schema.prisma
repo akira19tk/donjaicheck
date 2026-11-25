@@ -49,6 +49,7 @@ enum QuestionType {
   RATING
   SINGLE_CHOICE
   TEXT
+  MULTIPLE_CHOICE
 }
 
 model Survey {
@@ -83,6 +84,9 @@ model Question {
   text     String
   type     QuestionType
   required Boolean          @default(true)
+  // F-09 (BR-12): selection limits, used only by MULTIPLE_CHOICE questions
+  minSelections Int?
+  maxSelections Int?
   options  QuestionOption[]
   answers  Answer[]
 
@@ -96,6 +100,7 @@ model QuestionOption {
   position   Int
   label      String
   answers    Answer[]
+  selections AnswerOption[]
 
   @@unique([questionId, label])
 }
@@ -128,6 +133,7 @@ model Answer {
   optionId    Int?
   option      QuestionOption? @relation(fields: [optionId], references: [id])
   textValue   String?
+  selections  AnswerOption[]
 
   @@unique([responseId, questionId])
   @@index([questionId])
@@ -147,4 +153,17 @@ model VisitCode {
   response   Response? @relation(fields: [responseId], references: [id], onDelete: SetNull)
 
   @@index([surveyId, usedAt])
+}
+
+// F-09 ---------------------------------------------------------------------
+
+// One selected option of a MULTIPLE_CHOICE answer.
+model AnswerOption {
+  answerId Int
+  answer   Answer         @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  optionId Int
+  option   QuestionOption @relation(fields: [optionId], references: [id])
+
+  @@id([answerId, optionId])
+  @@index([optionId])
 }

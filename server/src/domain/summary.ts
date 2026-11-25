@@ -17,6 +17,8 @@ export interface SummaryAnswer {
   ratingValue: number | null;
   optionId: number | null;
   textValue: string | null;
+  /** F-09: selected option ids of a MULTIPLE_CHOICE answer (empty otherwise) */
+  optionIds?: number[];
   submittedAt: Date;
 }
 
@@ -39,6 +41,20 @@ export function buildSummary(questions: SummaryQuestion[], answers: SummaryAnswe
         ...base,
         answered: chosen.length,
         options: q.options.map((o) => ({ optionId: o.id, label: o.label, count: chosen.filter((a) => a.optionId === o.id).length })),
+      };
+    }
+
+    if (q.type === "MULTIPLE_CHOICE") {
+      // Counts respondents per option; `answered` = answers with at least one selection.
+      const chosen = mine.filter((a) => (a.optionIds ?? []).length > 0);
+      return {
+        ...base,
+        answered: chosen.length,
+        options: q.options.map((o) => ({
+          optionId: o.id,
+          label: o.label,
+          count: chosen.filter((a) => (a.optionIds ?? []).includes(o.id)).length,
+        })),
       };
     }
 
